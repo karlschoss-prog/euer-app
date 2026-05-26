@@ -2,10 +2,13 @@
 
 import { useState, useEffect } from "react"
 import KleinunternehmerWarnung from "@/components/KleinunternehmerWarnung"
-import { ladeBelege } from "@/lib/storage"
+import BelegEditModal from "@/components/BelegEditModal"
+import Toast from "@/components/Toast"
+import { ladeBelege, aktualisiereBeleg } from "@/lib/storage"
 import { berechneMonatsEuer, berechneJahresEuer } from "@/lib/berechnung"
 import { formatEuro } from "@/lib/formatierung"
 import { Beleg } from "@/types/beleg"
+import { BelegFormData } from "@/components/BelegForm"
 import Link from "next/link"
 
 const MONATE = [
@@ -27,8 +30,11 @@ export default function DashboardPage() {
   const monat = heute.getMonth() + 1
   const jahr = heute.getFullYear()
   const [belege, setBelege] = useState<Beleg[]>([])
+  const [editBeleg, setEditBeleg] = useState<Beleg | null>(null)
+  const [toast, setToast] = useState<string | null>(null)
 
-  useEffect(() => { setBelege(ladeBelege()) }, [])
+  function laden() { setBelege(ladeBelege()) }
+  useEffect(() => { laden() }, [])
 
   const monatsEuer = berechneMonatsEuer(belege, monat, jahr)
   const jahresSumme = berechneJahresEuer(belege, jahr).reduce(
@@ -46,6 +52,19 @@ export default function DashboardPage() {
     .filter((b) => buchungenFilter === "alle" || b.typ === buchungenFilter)
     .sort((a, b) => new Date(b.erstellt_am).getTime() - new Date(a.erstellt_am).getTime())
     .slice(0, buchungenFilter === "alle" ? 5 : 10)
+
+  function handleBearbeiten(data: BelegFormData) {
+    if (!editBeleg) return
+    const netto = data.menge * data.einzelpreis
+    aktualisiereBeleg({
+      ...editBeleg, ...data,
+      gesamtpreis: netto, nettobetrag: netto,
+      bruttobetrag: netto * (1 + data.mwst_satz / 100),
+    })
+    setEditBeleg(null)
+    laden()
+    setToast("Änderungen gespeichert")
+  }
 
   // Empty State
   if (belege.length === 0) {
@@ -79,6 +98,15 @@ export default function DashboardPage() {
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-8">
+      {toast && <Toast message={toast} onClose={() => setToast(null)} />}
+      {editBeleg && (
+        <BelegEditModal
+          beleg={editBeleg}
+          onSpeichern={handleBearbeiten}
+          onAbbrechen={() => setEditBeleg(null)}
+        />
+      )}
+
       <h1 className="text-2xl font-bold">Dashboard {jahr}</h1>
 
       <KleinunternehmerWarnung jahresEinnahmen={jahresSumme.einnahmen} jahr={jahr} />
@@ -126,32 +154,34 @@ export default function DashboardPage() {
       {/* Letzte Buchungen */}
       {letzteBuchungen.length > 0 && (
         <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
-          <div className="px-5 py-4 border-b flex items-center justify-between gap-4">
-            <div className="flex items-center gap-1">
-              {(["alle", "einnahme", "ausgabe"] as const).map((f) => {
-                const label = f === "alle" ? "Alle" : f === "einnahme" ? "Einnahmen" : "Ausgaben"
-                const active = buchungenFilter === f
-                const color = f === "einnahme"
-                  ? active ? "bg-green-100 text-green-700 border-green-300" : "text-gray-500 border-transparent hover:border-gray-200"
-                  : f === "ausgabe"
-                    ? active ? "bg-red-100 text-red-700 border-red-300" : "text-gray-500 border-transparent hover:border-gray-200"
-                    : active ? "bg-gray-100 text-gray-800 border-gray-300" : "text-gray-500 border-transparent hover:border-gray-200"
-                return (
-                  <button
-                    key={f}
-                    onClick={() => setBuchungenFilter(f)}
-                    className={`text-xs font-medium px-3 py-1 rounded-full border transition-colors ${color}`}
-                  >
-                    {label}
-                  </button>
-                )
-              })}
-            </div>
+          <div className="px-5 py-4 border-b flex items-center gap-1">
+            {(["alle", "einnahme", "ausgabe"] as const).map((f) => {
+              const label = f === "alle" ? "Alle" : f === "einnahme" ? "Einnahmen" : "Ausgaben"
+              const active = buchungenFilter === f
+              const color = f === "einnahme"
+                ? active ? "bg-green-100 text-green-700 border-green-300" : "text-gray-500 border-transparent hover:border-gray-200"
+                : f === "ausgabe"
+                  ? active ? "bg-red-100 text-red-700 border-red-300" : "text-gray-500 border-transparent hover:border-gray-200"
+                  : active ? "bg-gray-100 text-gray-800 border-gray-300" : "text-gray-500 border-transparent hover:border-gray-200"
+              return (
+                <button
+                  key={f}
+                  onClick={() => setBuchungenFilter(f)}
+                  className={`text-xs font-medium px-3 py-1 rounded-full border transition-colors ${color}`}
+                >
+                  {label}
+                </button>
+              )
+            })}
           </div>
           <ul className="divide-y divide-gray-50">
             {letzteBuchungen.map((b) => (
-              <li key={b.id} className="flex items-center px-5 py-3 gap-4 hover:bg-gray-50 transition-colors">
-                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+              <li
+                key={b.id}
+                onClick={() => setEditBeleg(b)}
+                className="flex items-center px-5 py-3 gap-4 hover:bg-gray-50 transition-colors cursor-pointer group"
+              >
+                <span className={`text-xs font-bold px-2 py-0.5 rounded-full shrink-0 ${
                   b.typ === "einnahme" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
                 }`}>
                   {b.typ === "einnahme" ? "E" : "A"}
@@ -164,6 +194,7 @@ export default function DashboardPage() {
                 <span className={`text-sm font-semibold shrink-0 ${b.typ === "einnahme" ? "text-green-700" : "text-red-700"}`}>
                   {b.typ === "einnahme" ? "+" : "−"}{formatEuro(b.nettobetrag)}
                 </span>
+                <span className="text-gray-300 text-sm group-hover:text-gray-400 shrink-0">›</span>
               </li>
             ))}
           </ul>
