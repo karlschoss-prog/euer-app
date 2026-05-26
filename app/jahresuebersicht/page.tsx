@@ -1,0 +1,260 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { ladeBelege, ladeGesperrteMonate, sperreMonate, entsperreMonate } from "@/lib/storage"
+import { berechneJahresEuer, berechneUmsatzsteuer } from "@/lib/berechnung"
+import { formatEuro } from "@/lib/formatierung"
+import { Beleg } from "@/types/beleg"
+
+const MONATE = [
+  "Januar", "Februar", "März", "April", "Mai", "Juni",
+  "Juli", "August", "September", "Oktober", "November", "Dezember",
+]
+
+const GRENZE = 25000
+
+function kumulativFarbe(kumuliert: number): string {
+  if (kumuliert >= GRENZE) return "text-red-700 font-bold"
+  if (kumuliert >= GRENZE * 0.9) return "text-red-600 font-semibold"
+  if (kumuliert >= GRENZE * 0.7) return "text-orange-600 font-semibold"
+  return "text-gray-700"
+}
+
+export default function JahresuebersichtPage() {
+  const router = useRouter()
+  const [jahr, setJahr] = useState(new Date().getFullYear())
+  const [belege, setBelege] = useState<Beleg[]>([])
+  const [gesperrteMonate, setGesperrteMonate] = useState<string[]>([])
+  const [ustAufgeklappt, setUstAufgeklappt] = useState(false)
+
+  function laden() {
+    setBelege(ladeBelege())
+    setGesperrteMonate(ladeGesperrteMonate())
+  }
+
+  useEffect(() => { laden() }, [])
+
+  const monate = berechneJahresEuer(belege, jahr)
+  const ustQuartale = berechneUmsatzsteuer(belege, jahr)
+
+  let laufendeEinnahmen = 0
+  const monateKumuliert = monate.map((m) => {
+    laufendeEinnahmen += m.einnahmen
+    return { ...m, kumuliert: laufendeEinnahmen }
+  })
+
+  const gesamt = monate.reduce(
+    (acc, m) => ({
+      einnahmen: acc.einnahmen + m.einnahmen,
+      ausgaben: acc.ausgaben + m.ausgaben,
+      ueberschuss: acc.ueberschuss + m.ueberschuss,
+    }),
+    { einnahmen: 0, ausgaben: 0, ueberschuss: 0 }
+  )
+
+  // Tempo-Forecast
+  const aktuellerMonat = new Date().getMonth() + 1
+  const monateAktuell = monate.filter((m) => m.monat <= aktuellerMonat && m.einnahmen > 0)
+  const avgMonatlich = monateAktuell.length > 0 ? gesamt.einnahmen / monateAktuell.length : 0
+  const verbleibend = GRENZE - gesamt.einnahmen
+  let forecastText: string | null = null
+  if (gesamt.einnahmen > 0 && gesamt.einnahmen < GRENZE && avgMonatlich > 0) {
+    const monateZurGrenze = Math.ceil(verbleibend / avgMonatlich)
+    const forecastMonat = aktuellerMonat + monateZurGrenze
+    if (forecastMonat <= 12) {
+      forecastText = `Bei aktuellem Tempo erreichst du die Grenze voraussichtlich im ${MONATE[forecastMonat - 1]}.`
+    } else {
+      forecastText = `Bei aktuellem Tempo bleibt die Grenze dieses Jahr sicher (${formatEuro(verbleibend)} verbleibend).`
+    }
+  } else if (gesamt.einnahmen >= GRENZE) {
+    forecastText = null
+  }
+
+  function toggleSperre(monat: number) {
+    const key = `${String(monat).padStart(2, "0")}.${jahr}`
+    if (gesperrteMonate.includes(key)) {
+      entsperreMonate(key)
+    } else {
+      sperreMonate(key)
+    }
+    setGesperrteMonate(ladeGesperrteMonate())
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto p-6 space-y-8">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Jahresübersicht</h1>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setJahr((j) => j - 1)} className="border rounded-lg px-3 py-1.5 text-sm hover:bg-gray-100">‹</button>
+          <span className="font-semibold text-lg w-16 text-center">{jahr}</span>
+          <button onClick={() => setJahr((j) => j + 1)} className="border rounded-lg px-3 py-1.5 text-sm hover:bg-gray-100">›</button>
+        </div>
+      </div>
+
+      {/* Jahreskarten */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className="bg-green-50 border border-green-200 rounded-xl p-5 shadow-sm">
+          <p className="text-sm text-green-700 font-medium">Einnahmen {jahr}</p>
+          <p className="text-2xl font-bold text-green-800 mt-1">{formatEuro(gesamt.einnahmen)}</p>
+        </div>
+        <div className="bg-red-50 border border-red-200 rounded-xl p-5 shadow-sm">
+          <p className="text-sm text-red-700 font-medium">Ausgaben {jahr}</p>
+          <p className="text-2xl font-bold text-red-800 mt-1">{formatEuro(gesamt.ausgaben)}</p>
+        </div>
+        <div className={`border rounded-xl p-5 shadow-sm ${gesamt.ueberschuss >= 0 ? "bg-blue-50 border-blue-200" : "bg-orange-50 border-orange-200"}`}>
+          <p className={`text-sm font-medium ${gesamt.ueberschuss >= 0 ? "text-blue-700" : "text-orange-700"}`}>Überschuss {jahr}</p>
+          <p className={`text-2xl font-bold mt-1 ${gesamt.ueberschuss >= 0 ? "text-blue-800" : "text-orange-800"}`}>{formatEuro(gesamt.ueberschuss)}</p>
+        </div>
+      </div>
+
+      {/* Tempo-Forecast */}
+      {forecastText && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl px-5 py-3 text-sm text-blue-800 flex items-center gap-2">
+          <span>📈</span>
+          <span>{forecastText}</span>
+        </div>
+      )}
+
+      {/* Monatstabelle */}
+      <div className="bg-white border rounded-xl overflow-hidden shadow-sm">
+        <table className="w-full text-sm border-collapse">
+          <thead>
+            <tr className="bg-gray-50 text-left">
+              <th className="px-4 py-3 font-semibold">Monat</th>
+              <th className="px-4 py-3 font-semibold text-right text-green-700">Einnahmen</th>
+              <th className="px-4 py-3 font-semibold text-right text-red-700">Ausgaben</th>
+              <th className="px-4 py-3 font-semibold text-right text-blue-700">Überschuss</th>
+              <th className="px-4 py-3 font-semibold text-right text-gray-600">
+                Kumuliert
+                <span className="block text-xs font-normal text-gray-400">§19 Grenze: {formatEuro(GRENZE)}</span>
+              </th>
+              <th className="px-4 py-3 text-center text-gray-500 font-semibold text-xs">Abschluss</th>
+            </tr>
+          </thead>
+          <tbody>
+            {monateKumuliert.map((m) => {
+              const hatDaten = m.einnahmen > 0 || m.ausgaben > 0
+              const key = `${String(m.monat).padStart(2, "0")}.${jahr}`
+              const gesperrt = gesperrteMonate.includes(key)
+              const prozent = Math.min((m.kumuliert / GRENZE) * 100, 100)
+              return (
+                <tr
+                  key={m.monat}
+                  className={`border-t group ${hatDaten ? "hover:bg-blue-50 cursor-pointer" : "text-gray-400"}`}
+                  onClick={() => hatDaten && router.push(`/export?monat=${m.monat}&jahr=${jahr}`)}
+                >
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <span className={hatDaten ? "font-medium" : ""}>{MONATE[m.monat - 1]}</span>
+                      {gesperrt && <span className="text-xs">🔒</span>}
+                      {hatDaten && (
+                        <span className="text-gray-300 group-hover:text-blue-500 transition-colors text-xs ml-1">→</span>
+                      )}
+                    </div>
+                  </td>
+                  <td className={`px-4 py-3 text-right ${hatDaten ? "text-green-700 font-medium" : ""}`}>
+                    {hatDaten ? formatEuro(m.einnahmen) : "—"}
+                  </td>
+                  <td className={`px-4 py-3 text-right ${hatDaten && m.ausgaben > 0 ? "text-red-700 font-medium" : ""}`}>
+                    {hatDaten ? formatEuro(m.ausgaben) : "—"}
+                  </td>
+                  <td className={`px-4 py-3 text-right font-medium ${!hatDaten ? "" : m.ueberschuss >= 0 ? "text-blue-700" : "text-orange-600"}`}>
+                    {hatDaten ? formatEuro(m.ueberschuss) : "—"}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    {m.kumuliert > 0 ? (
+                      <div className="flex flex-col items-end gap-1.5">
+                        <span className={kumulativFarbe(m.kumuliert)}>{formatEuro(m.kumuliert)}</span>
+                        <div className="w-24 h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${m.kumuliert >= GRENZE ? "bg-red-500" : m.kumuliert >= GRENZE * 0.7 ? "bg-orange-400" : "bg-green-400"}`}
+                            style={{ width: `${prozent}%` }}
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-gray-300">—</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
+                    {(hatDaten || gesperrt) && (
+                      <button
+                        onClick={() => toggleSperre(m.monat)}
+                        className={`text-xs px-3 py-1 rounded-lg border font-medium transition-colors ${
+                          gesperrt
+                            ? "bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200"
+                            : "text-gray-500 border-gray-300 hover:bg-gray-100 hover:border-gray-400"
+                        }`}
+                        title={gesperrt ? "Monat entsperren" : "Monat abschließen & sperren"}
+                      >
+                        {gesperrt ? "🔒 Gesperrt" : "Abschließen"}
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+          <tfoot>
+            <tr className="border-t-2 border-gray-200 bg-gray-50 font-bold">
+              <td className="px-4 py-3">Gesamt {jahr}</td>
+              <td className="px-4 py-3 text-right text-green-800">{formatEuro(gesamt.einnahmen)}</td>
+              <td className="px-4 py-3 text-right text-red-800">{formatEuro(gesamt.ausgaben)}</td>
+              <td className="px-4 py-3 text-right text-blue-800">{formatEuro(gesamt.ueberschuss)}</td>
+              <td /><td />
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      {/* USt-Auswertung — kollabierbar */}
+      <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
+        <button
+          onClick={() => setUstAufgeklappt((v) => !v)}
+          className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors"
+        >
+          <div>
+            <span className="font-semibold text-sm">Umsatzsteuer-Auswertung {jahr}</span>
+            <span className="ml-3 text-xs text-gray-400">Nur bei Regelbesteuerung relevant (nicht §19 UStG)</span>
+          </div>
+          <span className="text-gray-400 text-sm">{ustAufgeklappt ? "▲" : "▼"}</span>
+        </button>
+        {ustAufgeklappt && (
+          <div className="px-6 pb-5 border-t">
+            <table className="w-full text-sm border-collapse mt-4">
+              <thead>
+                <tr className="bg-gray-50 text-left">
+                  <th className="border px-3 py-2">Quartal</th>
+                  <th className="border px-3 py-2 text-right">Vereinnahmte USt</th>
+                  <th className="border px-3 py-2 text-right">Vorsteuer</th>
+                  <th className="border px-3 py-2 text-right">Zahllast</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ustQuartale.map((q) => (
+                  <tr key={q.quartal} className="hover:bg-gray-50">
+                    <td className="border px-3 py-2 font-medium">Q{q.quartal}</td>
+                    <td className="border px-3 py-2 text-right text-green-700">{formatEuro(q.ustEinnahmen)}</td>
+                    <td className="border px-3 py-2 text-right text-red-700">{formatEuro(q.vorsteuer)}</td>
+                    <td className={`border px-3 py-2 text-right font-medium ${q.zahllast >= 0 ? "text-blue-700" : "text-orange-600"}`}>
+                      {formatEuro(q.zahllast)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="bg-gray-50 font-bold border-t-2 border-gray-200">
+                  <td className="border px-3 py-2">Gesamt</td>
+                  <td className="border px-3 py-2 text-right text-green-800">{formatEuro(ustQuartale.reduce((s, q) => s + q.ustEinnahmen, 0))}</td>
+                  <td className="border px-3 py-2 text-right text-red-800">{formatEuro(ustQuartale.reduce((s, q) => s + q.vorsteuer, 0))}</td>
+                  <td className="border px-3 py-2 text-right text-blue-800">{formatEuro(ustQuartale.reduce((s, q) => s + q.zahllast, 0))}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
