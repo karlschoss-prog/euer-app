@@ -191,7 +191,6 @@ export default function BelegForm({ typ, onSpeichern, initialData, vorlagen = []
             className="w-full border rounded px-3 py-2 text-sm"
           >
             <option value="19">19 %</option>
-            <option value="7">7 %</option>
             <option value="0">0 %</option>
           </select>
         </div>
