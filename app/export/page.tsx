@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { Suspense, useState, useEffect } from "react"
 import { useSearchParams } from "next/navigation"
 import BelegTabelle from "@/components/BelegTabelle"
 import BelegEditModal from "@/components/BelegEditModal"
@@ -21,7 +21,7 @@ const MONATE = [
   "Juli", "August", "September", "Oktober", "November", "Dezember",
 ]
 
-export default function ExportPage() {
+function ExportContent() {
   const params = useSearchParams()
   const heute = new Date()
 
@@ -233,5 +233,13 @@ export default function ExportPage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function ExportPage() {
+  return (
+    <Suspense>
+      <ExportContent />
+    </Suspense>
   )
 }
