@@ -5,6 +5,10 @@ import {
   exportiereBelege, importiereDaten, ladeVorlagen, loescheVorlage,
   speichereBackupZeitstempel, ladeBackupZeitstempel,
 } from "@/lib/storage"
+import {
+  getBackupHandle, setBackupHandle, clearBackupHandle,
+  ladeAutoBackupZeitstempel, isFileSystemAccessSupported,
+} from "@/lib/backupHandle"
 import { Vorlage } from "@/types/beleg"
 import Toast from "@/components/Toast"
 
@@ -18,17 +22,37 @@ function backupAlterText(iso: string | null): { text: string; dringend: boolean 
   return { text: `Vor ${tage} Tagen gesichert — Backup empfohlen!`, dringend: true }
 }
 
+function zeitstempelText(iso: string | null): string {
+  if (!iso) return "Noch kein automatisches Backup"
+  const d = new Date(iso)
+  return `Zuletzt: ${d.toLocaleDateString("de-DE")} um ${d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })} Uhr`
+}
+
 export default function DatenPage() {
   const [vorlagen, setVorlagen] = useState<Vorlage[]>([])
   const [importStatus, setImportStatus] = useState<"idle" | "ok" | "fehler">("idle")
   const [toast, setToast] = useState<string | null>(null)
   const [backupTs, setBackupTs] = useState<string | null>(null)
+  const [autoBackupDatei, setAutoBackupDatei] = useState<string | null>(null)
+  const [autoBackupTs, setAutoBackupTs] = useState<string | null>(null)
+  const [autoBackupPermission, setAutoBackupPermission] = useState<"granted" | "prompt" | "none">("none")
+  const [fsSupported] = useState(() => isFileSystemAccessSupported())
   const fileRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     setVorlagen(ladeVorlagen())
     setBackupTs(ladeBackupZeitstempel())
+    setAutoBackupTs(ladeAutoBackupZeitstempel())
+    ladeHandleInfo()
   }, [])
+
+  async function ladeHandleInfo() {
+    const handle = await getBackupHandle()
+    if (!handle) { setAutoBackupDatei(null); return }
+    setAutoBackupDatei(handle.name)
+    const perm = await handle.queryPermission({ mode: "readwrite" })
+    setAutoBackupPermission(perm === "granted" ? "granted" : "prompt")
+  }
 
   const { text: backupText, dringend } = backupAlterText(backupTs)
 
@@ -70,6 +94,41 @@ export default function DatenPage() {
     setToast("Vorlage gelöscht")
   }
 
+  async function handleAutoBackupEinrichten() {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const handle = await (window as any).showSaveFilePicker({
+        suggestedName: "euer-backup.json",
+        types: [{ description: "JSON-Backup", accept: { "application/json": [".json"] } }],
+      }) as FileSystemFileHandle
+      await setBackupHandle(handle)
+      setAutoBackupDatei(handle.name)
+      setAutoBackupPermission("granted")
+      setToast("Automatisches Backup eingerichtet")
+    } catch {
+      // User cancelled picker
+    }
+  }
+
+  async function handleBerechtigungErneuern() {
+    const handle = await getBackupHandle()
+    if (!handle) return
+    try {
+      const perm = await handle.requestPermission({ mode: "readwrite" })
+      setAutoBackupPermission(perm === "granted" ? "granted" : "prompt")
+      if (perm === "granted") setToast("Berechtigung bestätigt")
+    } catch {
+      // ignore
+    }
+  }
+
+  async function handleAutoBackupEntfernen() {
+    await clearBackupHandle()
+    setAutoBackupDatei(null)
+    setAutoBackupPermission("none")
+    setToast("Automatisches Backup deaktiviert")
+  }
+
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-6">
       {toast && <Toast message={toast} onClose={() => setToast(null)} />}
@@ -83,9 +142,76 @@ export default function DatenPage() {
         </div>
       </div>
 
-      {/* Export */}
+      {/* Automatisches Backup */}
+      {fsSupported && (
+        <section className="bg-white border rounded-xl p-6 shadow-sm space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-semibold">Automatisches Backup</h2>
+            {autoBackupDatei && (
+              <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                autoBackupPermission === "granted"
+                  ? "bg-green-100 text-green-700"
+                  : "bg-orange-100 text-orange-700"
+              }`}>
+                {autoBackupPermission === "granted" ? "✓ Aktiv" : "⚠ Berechtigung nötig"}
+              </span>
+            )}
+          </div>
+          <p className="text-sm text-gray-500">
+            Wähle einmal eine Datei auf deinem Computer — die App überschreibt sie automatisch
+            wenn du den Tab verlässt oder das Fenster schließt.
+          </p>
+
+          {autoBackupDatei ? (
+            <div className="bg-gray-50 border rounded-lg px-4 py-3 space-y-2">
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-gray-400">📄</span>
+                <span className="font-medium text-gray-700">{autoBackupDatei}</span>
+              </div>
+              <p className="text-xs text-gray-400">{zeitstempelText(autoBackupTs)}</p>
+              <div className="flex gap-2 pt-1">
+                {autoBackupPermission !== "granted" && (
+                  <button
+                    onClick={handleBerechtigungErneuern}
+                    className="bg-blue-600 text-white px-4 py-1.5 rounded-lg hover:bg-blue-700 text-xs font-medium"
+                  >
+                    Berechtigung bestätigen
+                  </button>
+                )}
+                <button
+                  onClick={handleAutoBackupEinrichten}
+                  className="bg-gray-100 text-gray-700 px-4 py-1.5 rounded-lg hover:bg-gray-200 text-xs font-medium"
+                >
+                  Andere Datei wählen
+                </button>
+                <button
+                  onClick={handleAutoBackupEntfernen}
+                  className="text-red-500 hover:text-red-700 text-xs px-2"
+                >
+                  Deaktivieren
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={handleAutoBackupEinrichten}
+              className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium"
+            >
+              Backup-Datei einrichten
+            </button>
+          )}
+
+          {autoBackupPermission === "prompt" && autoBackupDatei && (
+            <p className="text-xs text-orange-600">
+              Nach einem Browser-Neustart muss die Berechtigung einmalig bestätigt werden.
+            </p>
+          )}
+        </section>
+      )}
+
+      {/* Manuelles Export */}
       <section className="bg-white border rounded-xl p-6 shadow-sm space-y-3">
-        <h2 className="text-base font-semibold">Backup exportieren</h2>
+        <h2 className="text-base font-semibold">Backup manuell exportieren</h2>
         <p className="text-sm text-gray-500">
           Speichert alle Belege und Vorlagen als JSON-Datei. Alle Daten liegen im Browser-LocalStorage
           und gehen beim Löschen des Browser-Caches verloren — regelmäßig sichern.
