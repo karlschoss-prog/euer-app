@@ -144,7 +144,7 @@ export default function DatenPage() {
 
       {/* Automatisches Backup */}
       {fsSupported && (
-        <section className="bg-white border rounded-xl p-6 shadow-sm space-y-3">
+        <section className="bg-white border rounded-xl p-6 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-semibold">Automatisches Backup</h2>
             {autoBackupDatei && (
@@ -157,10 +157,24 @@ export default function DatenPage() {
               </span>
             )}
           </div>
-          <p className="text-sm text-gray-500">
-            Wähle einmal eine Datei auf deinem Computer — die App überschreibt sie automatisch
-            wenn du den Tab verlässt oder das Fenster schließt.
-          </p>
+
+          {/* Erklärung — immer sichtbar */}
+          <div className="bg-blue-50 border border-blue-100 rounded-lg px-4 py-3 space-y-2">
+            <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide">So funktioniert's</p>
+            <ol className="space-y-1.5">
+              {[
+                { n: "1", text: "Klicke auf \"Backup-Datei einrichten\" und wähle einen Speicherort (z. B. Dokumente/euer-backup.json)." },
+                { n: "2", text: "Ab sofort überschreibt die App diese Datei automatisch, wenn du den Tab verlässt oder das Fenster schließt." },
+                { n: "3", text: "Nach einem Browser-Neustart einmalig \"Berechtigung bestätigen\" klicken — dann läuft es wieder automatisch." },
+              ].map(({ n, text }) => (
+                <li key={n} className="flex gap-2 text-xs text-blue-800">
+                  <span className="shrink-0 w-4 h-4 rounded-full bg-blue-200 text-blue-700 font-bold flex items-center justify-center text-[10px]">{n}</span>
+                  <span>{text}</span>
+                </li>
+              ))}
+            </ol>
+            <p className="text-xs text-blue-600 pt-0.5">Funktioniert in Chrome und Edge. Safari/Firefox: bitte manuellen Export nutzen.</p>
+          </div>
 
           {autoBackupDatei ? (
             <div className="bg-gray-50 border rounded-lg px-4 py-3 space-y-2">
