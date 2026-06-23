@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
-import { exportiereBelege } from "@/lib/storage"
+import { exportiereBelege, speichereBackupZeitstempel, DATEN_GEAENDERT } from "@/lib/storage"
 import { getBackupHandle, speichereAutoBackupZeitstempel } from "@/lib/backupHandle"
 
 export default function AutoBackup() {
@@ -18,19 +18,31 @@ export default function AutoBackup() {
         await writable.write(exportiereBelege())
         await writable.close()
         speichereAutoBackupZeitstempel()
+        speichereBackupZeitstempel()
       } catch {
-        // Permission revoked or file deleted — silently skip
+        // Berechtigung entzogen oder Datei gelöscht — still überspringen
       }
+    }
+
+    // Nach jeder Datenänderung sichern, leicht entzerrt (Debounce),
+    // damit nicht bei jedem Tastendruck geschrieben wird.
+    let timer: ReturnType<typeof setTimeout> | null = null
+    function onAenderung() {
+      if (timer) clearTimeout(timer)
+      timer = setTimeout(schreibeBackup, 1500)
     }
 
     function onHide() {
       if (document.visibilityState === "hidden") schreibeBackup()
     }
 
+    window.addEventListener(DATEN_GEAENDERT, onAenderung)
     document.addEventListener("visibilitychange", onHide)
     window.addEventListener("pagehide", schreibeBackup)
 
     return () => {
+      if (timer) clearTimeout(timer)
+      window.removeEventListener(DATEN_GEAENDERT, onAenderung)
       document.removeEventListener("visibilitychange", onHide)
       window.removeEventListener("pagehide", schreibeBackup)
     }

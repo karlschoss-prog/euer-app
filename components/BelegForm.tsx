@@ -48,24 +48,36 @@ function isoZuDeutsch(iso: string): string {
 
 export default function BelegForm({ typ, onSpeichern, initialData, vorlagen = [], naechsteBelegnummer }: BelegFormProps) {
   const listId = useId()
+  const istAusgabe = typ === "ausgabe"
   const label = typ === "einnahme" ? "Kundenname" : "Lieferant"
   const typVorlagen = vorlagen.filter((v) => v.typ === typ)
   const istEdit = !!initialData
+
+  // Bei Ausgaben gibt der Nutzer den Brutto-Einzelpreis ein; intern (und in der
+  // EÜR) wird mit Netto gerechnet. Beim Bearbeiten den Netto-Wert zurück in Brutto wandeln.
+  const initialEinzelpreis = initialData
+    ? istAusgabe
+      ? initialData.einzelpreis * (1 + initialData.mwst_satz / 100)
+      : initialData.einzelpreis
+    : 0
 
   const [datum, setDatum] = useState(initialData ? deutschZuISO(initialData.datum) : "")
   const [belegnummer, setBelegnummer] = useState(initialData?.belegnummer ?? naechsteBelegnummer ?? "")
   const [kundeLieferant, setKundeLieferant] = useState(initialData?.kunde_lieferant ?? "")
   const [leistung, setLeistung] = useState(initialData?.leistungsbeschreibung ?? "")
   const [menge, setMenge] = useState<number>(initialData?.menge ?? 0)
-  const [einzelpreis, setEinzelpreis] = useState<number>(initialData?.einzelpreis ?? 0)
+  const [einzelpreis, setEinzelpreis] = useState<number>(initialEinzelpreis)
   const [einzelpreisText, setEinzelpreisText] = useState(
-    initialData ? initialData.einzelpreis.toFixed(2).replace(".", ",") : ""
+    initialData ? initialEinzelpreis.toFixed(2).replace(".", ",") : ""
   )
   const [mwstSatz, setMwstSatz] = useState(initialData?.mwst_satz ?? (typ === "einnahme" ? 0 : 19))
   const [kategorie, setKategorie] = useState(initialData?.kategorie ?? "")
 
-  const netto = menge * einzelpreis
-  const brutto = netto * (1 + mwstSatz / 100)
+  // einzelpreis = Eingabewert (Brutto bei Ausgabe, sonst Netto). Netto je Einheit ableiten.
+  const nettoEinzel = istAusgabe ? einzelpreis / (1 + mwstSatz / 100) : einzelpreis
+  const netto = menge * nettoEinzel
+  const mwstBetrag = netto * (mwstSatz / 100)
+  const brutto = netto + mwstBetrag
 
   function ladeVorlage(id: string) {
     const v = typVorlagen.find((v) => v.id === id)
@@ -73,8 +85,10 @@ export default function BelegForm({ typ, onSpeichern, initialData, vorlagen = []
     setLeistung(v.leistungsbeschreibung)
     setKundeLieferant(v.kunde_lieferant ?? "")
     setMenge(v.menge)
-    setEinzelpreis(v.einzelpreis)
-    setEinzelpreisText(v.einzelpreis.toFixed(2).replace(".", ","))
+    // Vorlage speichert Netto; bei Ausgaben als Brutto ins Eingabefeld
+    const einzel = istAusgabe ? v.einzelpreis * (1 + v.mwst_satz / 100) : v.einzelpreis
+    setEinzelpreis(einzel)
+    setEinzelpreisText(einzel.toFixed(2).replace(".", ","))
     setMwstSatz(v.mwst_satz)
     setKategorie(v.kategorie ?? "")
   }
@@ -92,7 +106,7 @@ export default function BelegForm({ typ, onSpeichern, initialData, vorlagen = []
       kunde_lieferant: kundeLieferant.trim() || undefined,
       leistungsbeschreibung: leistung,
       menge,
-      einzelpreis,
+      einzelpreis: nettoEinzel,
       mwst_satz: mwstSatz,
       kategorie: kategorie.trim() || undefined,
     })
@@ -173,7 +187,9 @@ export default function BelegForm({ typ, onSpeichern, initialData, vorlagen = []
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Einzelpreis Netto (€)</label>
+          <label className="block text-sm font-medium mb-1">
+            {istAusgabe ? "Einzelpreis Brutto (€)" : "Einzelpreis Netto (€)"}
+          </label>
           <input
             type="text"
             placeholder="0,00"
@@ -191,6 +207,7 @@ export default function BelegForm({ typ, onSpeichern, initialData, vorlagen = []
             className="w-full border rounded px-3 py-2 text-sm"
           >
             <option value="19">19 %</option>
+            {istAusgabe && <option value="7">7 %</option>}
             <option value="0">0 %</option>
           </select>
         </div>
@@ -209,8 +226,19 @@ export default function BelegForm({ typ, onSpeichern, initialData, vorlagen = []
           </datalist>
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1 text-blue-700">Gesamtpreis Brutto</label>
-          <p className="px-1 py-2 text-2xl font-bold text-blue-700">{formatEuro(brutto)}</p>
+          <label className="block text-sm font-medium mb-1 text-blue-700">
+            {istAusgabe ? "Netto (für EÜR)" : "Gesamtpreis Brutto"}
+          </label>
+          {istAusgabe ? (
+            <div className="px-1 py-1">
+              <p className="text-2xl font-bold text-blue-700">{formatEuro(netto)}</p>
+              <p className="text-xs text-gray-500 mt-0.5">
+                enth. MwSt {formatEuro(mwstBetrag)} · Brutto {formatEuro(brutto)}
+              </p>
+            </div>
+          ) : (
+            <p className="px-1 py-2 text-2xl font-bold text-blue-700">{formatEuro(brutto)}</p>
+          )}
         </div>
       </div>
 

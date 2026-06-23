@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { ladeBelege, ladeGesperrteMonate, sperreMonate, entsperreMonate } from "@/lib/storage"
-import { berechneJahresEuer, berechneUmsatzsteuer } from "@/lib/berechnung"
+import { berechneJahresEuer, berechneUmsatzsteuer, berechneJahresVorsteuer } from "@/lib/berechnung"
 import { formatEuro } from "@/lib/formatierung"
 import { Beleg } from "@/types/beleg"
 
@@ -37,6 +37,7 @@ export default function JahresuebersichtPage() {
 
   const monate = berechneJahresEuer(belege, jahr)
   const ustQuartale = berechneUmsatzsteuer(belege, jahr)
+  const vorsteuer = berechneJahresVorsteuer(belege, jahr)
 
   let laufendeEinnahmen = 0
   const monateKumuliert = monate.map((m) => {
@@ -106,6 +107,12 @@ export default function JahresuebersichtPage() {
           <p className={`text-sm font-medium ${gesamt.ueberschuss >= 0 ? "text-blue-700" : "text-orange-700"}`}>Überschuss {jahr}</p>
           <p className={`text-2xl font-bold mt-1 ${gesamt.ueberschuss >= 0 ? "text-blue-800" : "text-orange-800"}`}>{formatEuro(gesamt.ueberschuss)}</p>
         </div>
+      </div>
+
+      {/* Gezahlte MwSt auf Ausgaben (Vorsteuer) */}
+      <div className="bg-white border rounded-xl px-5 py-3 shadow-sm flex items-center justify-between">
+        <span className="text-sm text-gray-600">Gezahlte MwSt auf Ausgaben (Vorsteuer) {jahr}</span>
+        <span className="text-lg font-bold text-gray-800">{formatEuro(vorsteuer)}</span>
       </div>
 
       {/* Tempo-Forecast */}

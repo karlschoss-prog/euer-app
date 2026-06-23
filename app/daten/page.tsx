@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import {
   exportiereBelege, importiereDaten, ladeVorlagen, loescheVorlage,
-  speichereBackupZeitstempel, ladeBackupZeitstempel,
+  speichereBackupZeitstempel, ladeBackupZeitstempel, setzeAllesZurueck,
 } from "@/lib/storage"
 import {
   getBackupHandle, setBackupHandle, clearBackupHandle,
@@ -87,6 +87,20 @@ export default function DatenPage() {
     reader.readAsText(file)
   }
 
+  function handleReset() {
+    const ok = window.confirm(
+      "Wirklich ALLE Daten löschen?\n\n" +
+        "Belege, Rechnungen, Kunden und Unternehmensprofile werden unwiderruflich entfernt. " +
+        "Falls das automatische Backup aktiv ist, wird auch die Backup-Datei mit leeren Daten überschrieben.\n\n" +
+        "Tipp: Vorher „Backup herunterladen“, falls du die aktuellen Daten noch sichern willst."
+    )
+    if (!ok) return
+    setzeAllesZurueck()
+    setVorlagen([])
+    setToast("Alle Daten wurden gelöscht")
+    setTimeout(() => window.location.reload(), 1200)
+  }
+
   function handleVorlageLoeschen(id: string, name: string) {
     if (!window.confirm(`Vorlage "${name}" wirklich löschen?`)) return
     loescheVorlage(id)
@@ -164,7 +178,7 @@ export default function DatenPage() {
             <ol className="space-y-1.5">
               {[
                 { n: "1", text: "Klicke auf \"Backup-Datei einrichten\" und wähle einen Speicherort (z. B. Dokumente/euer-backup.json)." },
-                { n: "2", text: "Ab sofort überschreibt die App diese Datei automatisch, wenn du den Tab verlässt oder das Fenster schließt." },
+                { n: "2", text: "Ab sofort überschreibt die App diese Datei automatisch nach jeder Änderung — im Hintergrund, ohne Dialog." },
                 { n: "3", text: "Nach einem Browser-Neustart einmalig \"Berechtigung bestätigen\" klicken — dann läuft es wieder automatisch." },
               ].map(({ n, text }) => (
                 <li key={n} className="flex gap-2 text-xs text-blue-800">
@@ -296,6 +310,21 @@ export default function DatenPage() {
             </tbody>
           </table>
         )}
+      </section>
+
+      {/* Gefahrenzone */}
+      <section className="bg-white border border-red-200 rounded-xl p-6 shadow-sm space-y-3">
+        <h2 className="text-base font-semibold text-red-700">Alle Daten löschen</h2>
+        <p className="text-sm text-gray-500">
+          Setzt die App komplett zurück: Belege, Rechnungen, Kunden, Unternehmensprofile und Vorlagen
+          werden unwiderruflich entfernt. Erstelle vorher ein Backup, falls du die Daten behalten möchtest.
+        </p>
+        <button
+          onClick={handleReset}
+          className="bg-red-600 text-white px-5 py-2 rounded-lg hover:bg-red-700 text-sm font-medium"
+        >
+          Alle Daten löschen
+        </button>
       </section>
     </div>
   )

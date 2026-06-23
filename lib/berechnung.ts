@@ -46,3 +46,19 @@ export function berechneJahresEinnahmen(belege: Beleg[], jahr: number): number {
     .filter((b) => b.typ === "einnahme" && b.datum.split(".")[2] === String(jahr))
     .reduce((s, b) => s + b.nettobetrag, 0)
 }
+
+// Im Jahr auf Ausgaben gezahlte MwSt (Vorsteuer)
+export function berechneJahresVorsteuer(belege: Beleg[], jahr: number): number {
+  return belege
+    .filter((b) => b.typ === "ausgabe" && b.datum.split(".")[2] === String(jahr))
+    .reduce((s, b) => s + (b.nettobetrag * b.mwst_satz) / 100, 0)
+}
+
+// Aufteilung des Überschusses: 50% Rücklage (z. B. Steuern), 50% frei verfügbar.
+// Slices ergeben zusammen die Gesamteinnahmen (Ausgaben + Rücklage + frei).
+export function berechneFreiesKapital(einnahmen: number, ausgaben: number) {
+  const ueberschuss = einnahmen - ausgaben
+  const ruecklage = ueberschuss > 0 ? ueberschuss * 0.5 : 0
+  const frei = ueberschuss > 0 ? ueberschuss * 0.5 : 0
+  return { einnahmen, ausgaben, ueberschuss, ruecklage, frei }
+}

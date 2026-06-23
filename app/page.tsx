@@ -4,11 +4,12 @@ import { useState, useEffect } from "react"
 import KleinunternehmerWarnung from "@/components/KleinunternehmerWarnung"
 import BelegEditModal from "@/components/BelegEditModal"
 import Toast from "@/components/Toast"
-import { ladeBelege, aktualisiereBeleg } from "@/lib/storage"
-import { berechneMonatsEuer, berechneJahresEuer } from "@/lib/berechnung"
+import { ladeBelege, aktualisiereBeleg, ladeAnfangsbestand, setzeAnfangsbestand } from "@/lib/storage"
+import { berechneMonatsEuer, berechneJahresEuer, berechneFreiesKapital } from "@/lib/berechnung"
 import { formatEuro } from "@/lib/formatierung"
 import { Beleg } from "@/types/beleg"
 import { BelegFormData } from "@/components/BelegForm"
+import FreiesKapitalChart from "@/components/FreiesKapitalChart"
 import Link from "next/link"
 
 const MONATE = [
@@ -32,9 +33,23 @@ export default function DashboardPage() {
   const [belege, setBelege] = useState<Beleg[]>([])
   const [editBeleg, setEditBeleg] = useState<Beleg | null>(null)
   const [toast, setToast] = useState<string | null>(null)
+  const [anfangsbestand, setAnfangsbestand] = useState(0)
+  const [anfangBearbeiten, setAnfangBearbeiten] = useState(false)
+  const [anfangText, setAnfangText] = useState("")
 
-  function laden() { setBelege(ladeBelege()) }
+  function laden() {
+    setBelege(ladeBelege())
+    setAnfangsbestand(ladeAnfangsbestand(jahr))
+  }
   useEffect(() => { laden() }, [])
+
+  function speichereAnfang() {
+    const betrag = parseFloat(anfangText.replace(/\./g, "").replace(",", ".")) || 0
+    setzeAnfangsbestand(jahr, betrag)
+    setAnfangsbestand(betrag)
+    setAnfangBearbeiten(false)
+    setToast("Anfangskontostand gespeichert")
+  }
 
   const monatsEuer = berechneMonatsEuer(belege, monat, jahr)
   const jahresSumme = berechneJahresEuer(belege, jahr).reduce(
@@ -45,6 +60,9 @@ export default function DashboardPage() {
     }),
     { einnahmen: 0, ausgaben: 0, ueberschuss: 0 }
   )
+
+  const kontostand = anfangsbestand + jahresSumme.einnahmen - jahresSumme.ausgaben
+  const freiesKapital = berechneFreiesKapital(jahresSumme.einnahmen, jahresSumme.ausgaben)
 
   const [buchungenFilter, setBuchungenFilter] = useState<"alle" | "einnahme" | "ausgabe">("alle")
 
@@ -151,6 +169,44 @@ export default function DashboardPage() {
         </p>
       </div>
 
+      {/* Kontostand */}
+      <div className="bg-white border rounded-xl shadow-sm p-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Kontostand</p>
+            <p className={`text-2xl font-bold mt-1 ${kontostand >= 0 ? "text-gray-800" : "text-red-700"}`}>
+              {formatEuro(kontostand)}
+            </p>
+            <p className="text-xs text-gray-400 mt-1">
+              Anfangsbestand 01.01.{jahr}: {formatEuro(anfangsbestand)} + Einnahmen − Ausgaben {jahr}
+            </p>
+          </div>
+          {!anfangBearbeiten && (
+            <button
+              onClick={() => { setAnfangText(anfangsbestand ? anfangsbestand.toFixed(2).replace(".", ",") : ""); setAnfangBearbeiten(true) }}
+              className="text-xs text-blue-600 hover:underline shrink-0"
+            >
+              Anfangsbestand bearbeiten
+            </button>
+          )}
+        </div>
+        {anfangBearbeiten && (
+          <div className="flex items-end gap-2 mt-4 pt-4 border-t">
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">Kontostand am 01.01.{jahr} (€)</label>
+              <input
+                value={anfangText}
+                onChange={(e) => setAnfangText(e.target.value)}
+                placeholder="0,00"
+                className="border rounded-lg px-3 py-2 text-sm w-40"
+              />
+            </div>
+            <button onClick={speichereAnfang} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium">Speichern</button>
+            <button onClick={() => setAnfangBearbeiten(false)} className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 text-sm font-medium">Abbrechen</button>
+          </div>
+        )}
+      </div>
+
       {/* Letzte Buchungen */}
       {letzteBuchungen.length > 0 && (
         <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
@@ -200,6 +256,20 @@ export default function DashboardPage() {
           </ul>
         </div>
       )}
+
+      {/* Nur für mich — freies Kapital */}
+      <div className="bg-white border rounded-xl shadow-sm p-6 space-y-4">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Nur für mich</span>
+          <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">privat</span>
+        </div>
+        <FreiesKapitalChart
+          einnahmen={freiesKapital.einnahmen}
+          ausgaben={freiesKapital.ausgaben}
+          ruecklage={freiesKapital.ruecklage}
+          frei={freiesKapital.frei}
+        />
+      </div>
     </div>
   )
 }
