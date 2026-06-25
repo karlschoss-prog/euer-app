@@ -4,7 +4,7 @@
 
 Dies ist ein Proof of Concept für eine schlanke Web-App zur Einnahmenüberschussrechnung (EÜR)
 für Einzelunternehmer in Deutschland. Das Produkt ist als SaaS geplant und soll später
-selbst gehostet werden. Der PoC dient zur Präsentation beim ersten Kunden (Markus).
+selbst gehostet werden.
 
 ## Stack
 
