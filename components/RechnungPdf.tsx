@@ -123,10 +123,20 @@ function zeichneFusszeile(doc: JsPdfDoc, rechnung: Rechnung) {
   doc.setTextColor(0)
 }
 
-function logoEinfuegen(doc: JsPdfDoc, logo: string | undefined, x: number, y: number, w: number, h: number) {
+// Setzt das Logo seitenverhältnistreu in den Kasten (x..x+maxW, y..y+maxH).
+// Es wird so weit wie möglich skaliert, rechtsbündig und vertikal zentriert
+// im Kasten platziert — kein Stauchen mehr.
+function logoEinfuegen(doc: JsPdfDoc, logo: string | undefined, x: number, y: number, maxW: number, maxH: number) {
   if (!logo) return
   try {
-    doc.addImage(logo, bildFormat(logo), x, y, w, h, undefined, "FAST")
+    const props = doc.getImageProperties(logo)
+    const ratio = props.width / props.height
+    let w = maxW
+    let h = w / ratio
+    if (h > maxH) { h = maxH; w = h * ratio }
+    const px = x + (maxW - w)        // rechtsbündig (rechte Kante bleibt am Rand)
+    const py = y + (maxH - h) / 2    // vertikal zentriert
+    doc.addImage(logo, bildFormat(logo), px, py, w, h, undefined, "FAST")
   } catch {
     // ungültiges Bild ignorieren
   }
