@@ -31,6 +31,7 @@ function zeitstempelText(iso: string | null): string {
 export default function DatenPage() {
   const [vorlagen, setVorlagen] = useState<Vorlage[]>([])
   const [importStatus, setImportStatus] = useState<"idle" | "ok" | "fehler">("idle")
+  const [importFehler, setImportFehler] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [backupTs, setBackupTs] = useState<string | null>(null)
   const [autoBackupDatei, setAutoBackupDatei] = useState<string | null>(null)
@@ -73,6 +74,8 @@ export default function DatenPage() {
   function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
+    setImportStatus("idle")
+    setImportFehler(null)
     const reader = new FileReader()
     reader.onload = (ev) => {
       try {
@@ -80,9 +83,14 @@ export default function DatenPage() {
         setImportStatus("ok")
         setVorlagen(ladeVorlagen())
         setTimeout(() => window.location.reload(), 1500)
-      } catch {
+      } catch (err) {
         setImportStatus("fehler")
+        setImportFehler(err instanceof Error ? err.message : "Unbekannter Fehler")
       }
+    }
+    reader.onerror = () => {
+      setImportStatus("fehler")
+      setImportFehler("Datei konnte nicht gelesen werden.")
     }
     reader.readAsText(file)
   }
@@ -270,7 +278,13 @@ export default function DatenPage() {
           <p className="text-sm text-green-700 font-medium">✓ Import erfolgreich — Seite wird neu geladen…</p>
         )}
         {importStatus === "fehler" && (
-          <p className="text-sm text-red-600 font-medium">Fehler beim Import — Datei prüfen.</p>
+          <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+            <p className="font-medium">Import fehlgeschlagen</p>
+            <p className="mt-0.5">{importFehler}</p>
+            <p className="mt-1 text-xs text-red-500">
+              Tipp: Auf dem Quellgerät erneut „Backup herunterladen“ und die Datei direkt (z. B. per AirDrop) übertragen — nicht den Inhalt kopieren/einfügen.
+            </p>
+          </div>
         )}
       </section>
 

@@ -76,13 +76,45 @@ export function setzeAllesZurueck(): void {
 }
 
 export function importiereDaten(json: string): void {
-  const parsed = JSON.parse(json)
-  if (parsed.belege) localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed.belege))
-  if (parsed.vorlagen) localStorage.setItem(VORLAGEN_KEY, JSON.stringify(parsed.vorlagen))
-  if (parsed.unternehmensprofile) localStorage.setItem(PROFILE_KEY, JSON.stringify(parsed.unternehmensprofile))
-  if (parsed.kunden) localStorage.setItem(KUNDEN_KEY, JSON.stringify(parsed.kunden))
-  if (parsed.rechnungen) localStorage.setItem(RECHNUNGEN_KEY, JSON.stringify(parsed.rechnungen))
-  if (parsed.anfangsbestaende) localStorage.setItem(ANFANG_KEY, JSON.stringify(parsed.anfangsbestaende))
+  // BOM und Leerraum entfernen (manche Editoren/Transferwege fügen sie hinzu)
+  const text = (json ?? "").replace(/^﻿/, "").trim()
+  if (!text) {
+    throw new Error("Die Datei ist leer (0 Zeichen). Bitte auf dem Quellgerät erneut „Backup herunterladen“.")
+  }
+
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(text)
+  } catch {
+    const vorschau = text.slice(0, 40).replace(/\s+/g, " ")
+    throw new Error(
+      `Datei ist kein gültiges JSON (evtl. unvollständig oder beim Transfer verändert). Anfang: „${vorschau}…“`
+    )
+  }
+
+  if (typeof parsed !== "object" || parsed === null) {
+    throw new Error("Unerwartetes Dateiformat — kein EÜR-Backup.")
+  }
+
+  const p = parsed as Record<string, unknown>
+  const bekannteSchluessel = ["belege", "vorlagen", "unternehmensprofile", "kunden", "rechnungen", "anfangsbestaende"]
+  if (!bekannteSchluessel.some((k) => k in p)) {
+    throw new Error("Die Datei enthält keine EÜR-Daten (keine Belege, Rechnungen o. Ä. gefunden).")
+  }
+
+  try {
+    if (p.belege) localStorage.setItem(STORAGE_KEY, JSON.stringify(p.belege))
+    if (p.vorlagen) localStorage.setItem(VORLAGEN_KEY, JSON.stringify(p.vorlagen))
+    if (p.unternehmensprofile) localStorage.setItem(PROFILE_KEY, JSON.stringify(p.unternehmensprofile))
+    if (p.kunden) localStorage.setItem(KUNDEN_KEY, JSON.stringify(p.kunden))
+    if (p.rechnungen) localStorage.setItem(RECHNUNGEN_KEY, JSON.stringify(p.rechnungen))
+    if (p.anfangsbestaende) localStorage.setItem(ANFANG_KEY, JSON.stringify(p.anfangsbestaende))
+  } catch (e) {
+    if (e instanceof Error && e.name === "QuotaExceededError") {
+      throw new Error("Speicherlimit des Browsers überschritten (Backup zu groß, evtl. großes Logo). Daten ggf. verkleinern.")
+    }
+    throw e
+  }
 }
 
 // --- Anfangskontostand pro Jahr ---
