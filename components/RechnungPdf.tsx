@@ -103,10 +103,9 @@ function bankZeile(rechnung: Rechnung): string {
 
 function pflichtFusszeile(rechnung: Rechnung): string {
   const a = rechnung.absender
+  // Name, Inhaber und Anschrift bewusst NICHT wiederholen — stehen bereits im Kopf.
+  // Fußzeile zeigt nur Kontakt- und Steuerangaben.
   const fuss: string[] = []
-  if (a.firmenname) fuss.push(a.firmenname + (a.inhaber ? ` · Inh. ${a.inhaber}` : ""))
-  const adr = [a.strasse, [a.plz, a.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ")
-  if (adr) fuss.push(adr)
   if (a.telefon) fuss.push(`Tel: ${a.telefon}`)
   if (a.email) fuss.push(a.email)
   if (a.website) fuss.push(a.website)
