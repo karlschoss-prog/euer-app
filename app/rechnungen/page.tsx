@@ -148,11 +148,15 @@ export default function RechnungenPage() {
                     <td className="px-4 py-3">
                       <button
                         onClick={() => statusUmschalten(r)}
-                        className={`text-xs font-medium px-2 py-1 rounded-full ${
-                          r.status === "bezahlt" ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"
+                        title={r.status === "bezahlt" ? "Auf „offen“ zurücksetzen" : "Als bezahlt verbuchen"}
+                        className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full border transition-colors cursor-pointer ${
+                          r.status === "bezahlt"
+                            ? "bg-green-100 text-green-700 border-green-200 hover:bg-green-200"
+                            : "bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-200"
                         }`}
                       >
                         {r.status === "bezahlt" ? "Bezahlt" : "Offen"}
+                        <span className="text-[9px] leading-none opacity-60">▾</span>
                       </button>
                     </td>
                     <td className="px-4 py-3">
