@@ -103,9 +103,9 @@ function bankZeile(rechnung: Rechnung): string {
 
 function pflichtFusszeile(rechnung: Rechnung): string {
   const a = rechnung.absender
-  // Name, Inhaber und Anschrift bewusst NICHT wiederholen — stehen bereits im Kopf.
-  // Fußzeile zeigt nur Kontakt- und Steuerangaben.
+  // Firmenname + Kontakt-/Steuerangaben. Inhaber und Anschrift bewusst weg (stehen im Kopf).
   const fuss: string[] = []
+  if (a.firmenname) fuss.push(a.firmenname)
   if (a.telefon) fuss.push(`Tel: ${a.telefon}`)
   if (a.email) fuss.push(a.email)
   if (a.website) fuss.push(a.website)
@@ -118,7 +118,7 @@ function zeichneFusszeile(doc: JsPdfDoc, rechnung: Rechnung) {
   doc.setFontSize(7)
   doc.setTextColor(140)
   const zeilen = doc.splitTextToSize(pflichtFusszeile(rechnung), 170)
-  doc.text(zeilen, 20, 286)
+  doc.text(zeilen, 105, 286, { align: "center" })
   doc.setTextColor(0)
 }
 
