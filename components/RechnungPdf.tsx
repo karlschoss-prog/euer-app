@@ -45,7 +45,7 @@ const STANDARD_FARBEN: Record<RechnungDesign, RGB> = {
   "ks-rec": [210, 58, 47],
 }
 
-function akzentFarbe(rechnung: Rechnung): RGB {
+export function akzentFarbe(rechnung: Rechnung): RGB {
   const a = rechnung.absender
   if (a.akzentfarbe) return hexZuRgb(a.akzentfarbe)
   return STANDARD_FARBEN[a.design ?? "klassisch"]
@@ -72,33 +72,22 @@ function positionsTabelle(rechnung: Rechnung) {
   return { head, body, columnStyles: rechtsBuendig }
 }
 
-function empfaengerZeilen(rechnung: Rechnung): string[] {
+export function empfaengerZeilen(rechnung: Rechnung): string[] {
   const e = rechnung.empfaenger
   return [e.name, e.ansprechpartner, e.strasse, [e.plz, e.ort].filter(Boolean).join(" "), e.land]
     .filter(Boolean) as string[]
 }
 
 function metaZeilen(rechnung: Rechnung): [string, string][] {
-  const a = rechnung.absender
   const e = rechnung.empfaenger
+  // Steuer-Nr. & USt-IdNr. des Absenders stehen nur noch in der Fußzeile
+  // (gängige Platzierung auf deutschen Rechnungen), nicht mehr hier oben.
   return ([
     ["Rechnungs-Nr.", rechnung.rechnungsnummer],
     ["Rechnungsdatum", rechnung.rechnungsdatum],
     ["Leistungsdatum", rechnung.leistungsdatum],
-    ["Steuer-Nr.", a.steuernummer],
-    ["USt-IdNr.", a.ustIdNr],
     ["Kunden-USt-IdNr.", e.ustIdNr],
   ].filter(([, v]) => !!v) as [string, string][])
-}
-
-function bankZeile(rechnung: Rechnung): string {
-  const a = rechnung.absender
-  return [
-    a.kontoinhaber ? `Kontoinhaber: ${a.kontoinhaber}` : null,
-    a.iban ? `IBAN: ${a.iban}` : null,
-    a.bic ? `BIC: ${a.bic}` : null,
-    a.bank ? `Bank: ${a.bank}` : null,
-  ].filter(Boolean).join("   ")
 }
 
 function pflichtFusszeile(rechnung: Rechnung): string {
@@ -114,7 +103,7 @@ function pflichtFusszeile(rechnung: Rechnung): string {
   return fuss.join(" · ")
 }
 
-function zeichneFusszeile(doc: JsPdfDoc, rechnung: Rechnung) {
+export function zeichneFusszeile(doc: JsPdfDoc, rechnung: Rechnung) {
   doc.setFontSize(7)
   doc.setTextColor(140)
   const zeilen = doc.splitTextToSize(pflichtFusszeile(rechnung), 170)
@@ -125,7 +114,7 @@ function zeichneFusszeile(doc: JsPdfDoc, rechnung: Rechnung) {
 // Setzt das Logo seitenverhältnistreu in den Kasten (x..x+maxW, y..y+maxH).
 // Es wird so weit wie möglich skaliert, rechtsbündig und vertikal zentriert
 // im Kasten platziert — kein Stauchen mehr.
-function logoEinfuegen(doc: JsPdfDoc, logo: string | undefined, x: number, y: number, maxW: number, maxH: number) {
+export function logoEinfuegen(doc: JsPdfDoc, logo: string | undefined, x: number, y: number, maxW: number, maxH: number) {
   if (!logo) return
   try {
     const props = doc.getImageProperties(logo)
@@ -370,23 +359,65 @@ function zeichneSummenRechts(doc: JsPdfDoc, rechnung: Rechnung, summen: Rechnung
   doc.lastSummenY = ySum + 4
 }
 
+// Zeichnet den Bankverbindungs-Block (Trennlinie, Überschrift, Kontoinhaber/IBAN/BIC/Bank)
+// als beschriftete Label/Wert-Liste. Wird von Rechnung und Mahnung geteilt (DRY).
+// Gibt das neue y zurück; zeichnet nichts, wenn keine Bankdaten hinterlegt sind.
+export function zeichneBankverbindung(doc: JsPdfDoc, font: string, rechnung: Rechnung, startY: number): number {
+  const a = rechnung.absender
+  const links = 20, rechts = 190
+  const bank = ([
+    ["Kontoinhaber", a.kontoinhaber],
+    ["IBAN", a.iban],
+    ["BIC", a.bic],
+    ["Bank", a.bank],
+  ].filter(([, v]) => !!v) as [string, string][])
+  if (!bank.length) return startY
+
+  let y = startY + 4
+  doc.setDrawColor(220); doc.setLineWidth(0.3); doc.line(links, y, rechts, y)
+  y += 8
+  doc.setFont(font, "bold"); doc.setFontSize(10); doc.setTextColor(40)
+  doc.text("Bankverbindung", links, y)
+  doc.setFont(font, "normal"); doc.setFontSize(9)
+  y += 8
+  bank.forEach(([k, v]) => {
+    doc.setTextColor(140); doc.text(k, links, y)
+    doc.setTextColor(40); doc.text(v, links + 38, y)
+    y += 6
+  })
+  doc.setTextColor(0)
+  return y
+}
+
 function zeichneHinweisUndBank(doc: JsPdfDoc, rechnung: Rechnung, startY: number): number {
+  const links = 20
+  const font = rechnung.absender.design === "elegant" ? "times" : "helvetica"
   let y = startY
+
+  doc.setFont(font, "normal")
   doc.setFontSize(9)
+  doc.setTextColor(0)
   if (rechnung.kleinunternehmer) {
     const zeilen = doc.splitTextToSize("Gemäß § 19 UStG wird keine Umsatzsteuer berechnet (Kleinunternehmerregelung).", 170)
-    doc.text(zeilen, 20, y); y += zeilen.length * 5 + 2
+    doc.text(zeilen, links, y); y += zeilen.length * 5 + 2
   }
-  const faellig = addTage(rechnung.rechnungsdatum, rechnung.zahlungszielTage)
-  doc.text(`Zahlbar bis ${faellig} (${rechnung.zahlungszielTage} Tage) ohne Abzug.`, 20, y); y += 6
-  const bank = bankZeile(rechnung)
-  if (bank) { doc.setTextColor(80); doc.text(bank, 20, y); doc.setTextColor(0); y += 6 }
+
+  y = zeichneBankverbindung(doc, font, rechnung, y)
+
+  // Zahlungsziel + Verwendungszweck-Hinweis
+  y += 4
+  doc.setFontSize(9); doc.setTextColor(140)
+  doc.text(`Zahlungsziel: ${rechnung.zahlungszielTage} Tage nach Rechnungserhalt`, links, y)
+  y += 5.5
+  doc.text("Bitte überweisen Sie den Betrag unter Angabe der Rechnungsnummer.", links, y)
+  y += 6
+  doc.setTextColor(0)
   return y
 }
 
 function zeichneAbschluss(doc: JsPdfDoc, rechnung: Rechnung, accent: RGB) {
   void accent
-  let y = zeichneHinweisUndBank(doc, rechnung, doc.lastSummenY ?? doc.lastAutoTable.finalY + 16)
+  const y = zeichneHinweisUndBank(doc, rechnung, doc.lastSummenY ?? doc.lastAutoTable.finalY + 16)
   if (rechnung.fusstext) {
     doc.setFontSize(8); doc.setTextColor(120)
     doc.text(doc.splitTextToSize(rechnung.fusstext, 170), 20, y + 2)
@@ -396,20 +427,37 @@ function zeichneAbschluss(doc: JsPdfDoc, rechnung: Rechnung, accent: RGB) {
 
 // =================== Dispatcher ===================
 
-async function baueRechnungDoc(rechnung: Rechnung): Promise<JsPdfDoc> {
-  const { default: jsPDF } = await import("jspdf")
-  const { default: autoTable } = await import("jspdf-autotable")
-  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" })
-
+// Rendert eine Rechnung auf die AKTUELLE Seite des Dokuments (jsPDF-Designs).
+// erzwingeKlassisch: für die Mahnungs-Beilage, wenn das Originaldesign react-pdf
+// ("ks-rec") ist und nicht in ein jsPDF-Dokument gemischt werden kann.
+function rendereAufAktuelleSeite(doc: JsPdfDoc, autoTable: AutoTable, rechnung: Rechnung, erzwingeKlassisch = false) {
   const summen = rechnungSummen(rechnung.positionen, rechnung.kleinunternehmer)
   const accent = akzentFarbe(rechnung)
-  const design = rechnung.absender.design ?? "klassisch"
+  const design = erzwingeKlassisch ? "klassisch" : (rechnung.absender.design ?? "klassisch")
 
   if (design === "kreativ") renderKreativ(doc, autoTable, rechnung, summen, accent)
   else if (design === "elegant") renderElegant(doc, autoTable, rechnung, summen, accent)
   else renderKlassisch(doc, autoTable, rechnung, summen, accent)
+}
 
+async function baueRechnungDoc(rechnung: Rechnung): Promise<JsPdfDoc> {
+  const { default: jsPDF } = await import("jspdf")
+  const { default: autoTable } = await import("jspdf-autotable")
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" })
+  rendereAufAktuelleSeite(doc, autoTable, rechnung)
   return doc
+}
+
+// Hängt die Original-Rechnung als neue Seite an ein bestehendes jsPDF-Dokument an
+// (z. B. um sie einer Mahnung beizulegen — "Rechnung muss mitgesendet werden").
+// Das react-pdf-Design "ks-rec" lässt sich nicht in ein jsPDF-Dokument mischen;
+// für die Beilage wird dann das klassische Layout verwendet, damit eine einzige
+// Datei entsteht.
+export async function haengeRechnungAnDoc(doc: JsPdfDoc, rechnung: Rechnung): Promise<void> {
+  const { default: autoTable } = await import("jspdf-autotable")
+  doc.addPage()
+  const istReactPdfDesign = rechnung.absender.design === "ks-rec"
+  rendereAufAktuelleSeite(doc, autoTable, rechnung, istReactPdfDesign)
 }
 
 // --- react-pdf-Designs (z. B. "KS · REC") ---

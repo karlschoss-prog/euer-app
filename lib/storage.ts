@@ -1,4 +1,4 @@
-import { Beleg, Vorlage, Unternehmensprofil, Kunde, Rechnung } from "@/types/beleg"
+import { Beleg, Vorlage, Unternehmensprofil, Kunde, Rechnung, Mahnung } from "@/types/beleg"
 import { erstelleBelegeAusRechnung, trailingNumber } from "@/lib/rechnung"
 
 const STORAGE_KEY = "euer_belege"
@@ -7,6 +7,7 @@ const SPERREN_KEY = "euer_gesperrte_monate"
 const PROFILE_KEY = "euer_unternehmensprofile"
 const KUNDEN_KEY = "euer_kunden"
 const RECHNUNGEN_KEY = "euer_rechnungen"
+const MAHNUNGEN_KEY = "euer_mahnungen"
 const ANFANG_KEY = "euer_anfangsbestaende"
 
 // Name des Events, das nach jeder Datenänderung gefeuert wird.
@@ -58,6 +59,7 @@ export function exportiereBelege(): string {
       unternehmensprofile: ladeProfile(),
       kunden: ladeKunden(),
       rechnungen: ladeRechnungen(),
+      mahnungen: ladeMahnungen(),
       anfangsbestaende: ladeAnfangsbestaende(),
     },
     null,
@@ -69,7 +71,7 @@ export function exportiereBelege(): string {
 // Backup-Datei-Verknüpfung und -Zeitstempel bleiben erhalten.
 export function setzeAllesZurueck(): void {
   if (typeof window === "undefined") return
-  ;[STORAGE_KEY, VORLAGEN_KEY, SPERREN_KEY, PROFILE_KEY, KUNDEN_KEY, RECHNUNGEN_KEY, ANFANG_KEY].forEach(
+  ;[STORAGE_KEY, VORLAGEN_KEY, SPERREN_KEY, PROFILE_KEY, KUNDEN_KEY, RECHNUNGEN_KEY, MAHNUNGEN_KEY, ANFANG_KEY].forEach(
     (key) => localStorage.removeItem(key)
   )
   window.dispatchEvent(new Event(DATEN_GEAENDERT))
@@ -97,7 +99,7 @@ export function importiereDaten(json: string): void {
   }
 
   const p = parsed as Record<string, unknown>
-  const bekannteSchluessel = ["belege", "vorlagen", "unternehmensprofile", "kunden", "rechnungen", "anfangsbestaende"]
+  const bekannteSchluessel = ["belege", "vorlagen", "unternehmensprofile", "kunden", "rechnungen", "mahnungen", "anfangsbestaende"]
   if (!bekannteSchluessel.some((k) => k in p)) {
     throw new Error("Die Datei enthält keine EÜR-Daten (keine Belege, Rechnungen o. Ä. gefunden).")
   }
@@ -108,6 +110,7 @@ export function importiereDaten(json: string): void {
     if (p.unternehmensprofile) localStorage.setItem(PROFILE_KEY, JSON.stringify(p.unternehmensprofile))
     if (p.kunden) localStorage.setItem(KUNDEN_KEY, JSON.stringify(p.kunden))
     if (p.rechnungen) localStorage.setItem(RECHNUNGEN_KEY, JSON.stringify(p.rechnungen))
+    if (p.mahnungen) localStorage.setItem(MAHNUNGEN_KEY, JSON.stringify(p.mahnungen))
     if (p.anfangsbestaende) localStorage.setItem(ANFANG_KEY, JSON.stringify(p.anfangsbestaende))
   } catch (e) {
     if (e instanceof Error && e.name === "QuotaExceededError") {
@@ -280,6 +283,8 @@ export function loescheRechnung(id: string): void {
   schreibe(RECHNUNGEN_KEY, ladeRechnungen().filter((r) => r.id !== id))
   // verknüpfte Einnahme-Belege ebenfalls entfernen
   loescheBelegeNachRechnung(id)
+  // verknüpfte Mahnungen ebenfalls entfernen
+  loescheMahnungenNachRechnung(id)
 }
 
 export function ladeRechnung(id: string): Rechnung | undefined {
@@ -298,4 +303,32 @@ export function speichereRechnungMitBelegen(rechnung: Rechnung): void {
   // Fortlaufenden Zähler nachziehen, falls die Nummer manuell gesetzt wurde
   const n = trailingNumber(rechnung.rechnungsnummer)
   if (n !== null) erhoeheRechnungszaehler(rechnung.profilId, n + 1)
+}
+
+// --- Mahnungen ---
+
+export function ladeMahnungen(): Mahnung[] {
+  if (typeof window === "undefined") return []
+  const raw = localStorage.getItem(MAHNUNGEN_KEY)
+  return raw ? JSON.parse(raw) : []
+}
+
+export function ladeMahnungenNachRechnung(rechnungId: string): Mahnung[] {
+  return ladeMahnungen().filter((m) => m.rechnungId === rechnungId)
+}
+
+export function speichereMahnung(mahnung: Mahnung): void {
+  const mahnungen = ladeMahnungen()
+  const idx = mahnungen.findIndex((m) => m.id === mahnung.id)
+  if (idx >= 0) mahnungen[idx] = mahnung
+  else mahnungen.push(mahnung)
+  schreibe(MAHNUNGEN_KEY, mahnungen)
+}
+
+export function loescheMahnung(id: string): void {
+  schreibe(MAHNUNGEN_KEY, ladeMahnungen().filter((m) => m.id !== id))
+}
+
+export function loescheMahnungenNachRechnung(rechnungId: string): void {
+  schreibe(MAHNUNGEN_KEY, ladeMahnungen().filter((m) => m.rechnungId !== rechnungId))
 }

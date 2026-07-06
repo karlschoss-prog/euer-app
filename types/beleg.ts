@@ -146,3 +146,29 @@ export interface Rechnung {
   status: RechnungStatus
   erstellt_am: string
 }
+
+// --- Mahnwesen ---
+
+// Eskalationsstufen einer Mahnung. Reihenfolge = Ablauf (streng sequenziell):
+// Zahlungserinnerung → 1. Mahnung → 2. Mahnung → gerichtliches Mahnverfahren.
+export type MahnStufe = "zahlungserinnerung" | "mahnung_1" | "mahnung_2" | "mahnverfahren"
+
+// Eine erstellte Mahnung zu einer bereits versendeten Rechnung. Absender- und
+// Empfängerdaten werden nicht dupliziert, sondern aus der referenzierten Rechnung
+// gelesen (die trägt bereits einen immutablen Snapshot, §14 UStG / GoBD). Die
+// berechneten Beträge werden hier als Snapshot des Mahnzeitpunkts festgehalten.
+export interface Mahnung {
+  id: string
+  rechnungId: string
+  rechnungsnummer: string       // Snapshot für Anzeige/Verlauf
+  profilId: string
+  stufe: MahnStufe
+  stufeNr: number               // 0 = Erinnerung, 1 = 1. Mahnung, 2 = 2. Mahnung, 3 = Mahnverfahren
+  mahndatum: string             // TT.MM.JJJJ
+  neuesZahlungsziel: string     // TT.MM.JJJJ — neue Frist zur Zahlung
+  rechnungsbetrag: number       // offener Bruttobetrag (Snapshot)
+  mahnkostenProzent: number     // kumulierter Aufschlag: 0, 5 oder 10
+  mahnkostenBetrag: number      // = rechnungsbetrag * mahnkostenProzent / 100
+  gesamtforderung: number       // = rechnungsbetrag + mahnkostenBetrag
+  erstellt_am: string           // ISO-Timestamp
+}
