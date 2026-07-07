@@ -35,17 +35,17 @@ export default function EuerUebersicht({ belege, monat, jahr }: EuerUebersichtPr
           Monatsübersicht — {MONATE[monat - 1]} {jahr}
         </h2>
         <div className="grid grid-cols-3 gap-4">
-          <div className="bg-green-50 border border-green-200 rounded p-4">
-            <p className="text-sm text-green-700">Einnahmen</p>
-            <p className="text-xl font-bold text-green-800">{formatEuro(monatsEuer.einnahmen)}</p>
+          <div className="bg-pos-tint border border-pos-line rounded-xl p-4">
+            <p className="text-sm text-pos">Einnahmen</p>
+            <p className="text-xl font-bold text-pos tnum">{formatEuro(monatsEuer.einnahmen)}</p>
           </div>
-          <div className="bg-red-50 border border-red-200 rounded p-4">
-            <p className="text-sm text-red-700">Ausgaben</p>
-            <p className="text-xl font-bold text-red-800">{formatEuro(monatsEuer.ausgaben)}</p>
+          <div className="bg-neg-tint border border-neg-line rounded-xl p-4">
+            <p className="text-sm text-neg">Ausgaben</p>
+            <p className="text-xl font-bold text-neg tnum">{formatEuro(monatsEuer.ausgaben)}</p>
           </div>
-          <div className="bg-blue-50 border border-blue-200 rounded p-4">
-            <p className="text-sm text-blue-700">Überschuss</p>
-            <p className="text-xl font-bold text-blue-800">{formatEuro(monatsEuer.ueberschuss)}</p>
+          <div className="bg-brand-tint border border-line rounded-xl p-4">
+            <p className="text-sm text-brand-ink">Überschuss</p>
+            <p className="text-xl font-bold text-brand-ink tnum">{formatEuro(monatsEuer.ueberschuss)}</p>
           </div>
         </div>
       </section>
@@ -55,30 +55,30 @@ export default function EuerUebersicht({ belege, monat, jahr }: EuerUebersichtPr
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">
             <thead>
-              <tr className="bg-gray-100 text-left">
-                <th className="border px-3 py-2">Monat</th>
-                <th className="border px-3 py-2 text-right">Einnahmen</th>
-                <th className="border px-3 py-2 text-right">Ausgaben</th>
-                <th className="border px-3 py-2 text-right">Überschuss</th>
+              <tr className="bg-surface-2 text-left text-muted">
+                <th className="border border-line px-3 py-2">Monat</th>
+                <th className="border border-line px-3 py-2 text-right">Einnahmen</th>
+                <th className="border border-line px-3 py-2 text-right">Ausgaben</th>
+                <th className="border border-line px-3 py-2 text-right">Überschuss</th>
               </tr>
             </thead>
             <tbody>
               {jahresEuer.map((m) => (
                 <tr
                   key={m.monat}
-                  className={m.monat === monat ? "bg-blue-50 font-medium" : "hover:bg-gray-50"}
+                  className={m.monat === monat ? "bg-brand-tint font-medium" : "hover:bg-surface-2"}
                 >
-                  <td className="border px-3 py-2">{MONATE[m.monat - 1]}</td>
-                  <td className="border px-3 py-2 text-right">{formatEuro(m.einnahmen)}</td>
-                  <td className="border px-3 py-2 text-right">{formatEuro(m.ausgaben)}</td>
-                  <td className="border px-3 py-2 text-right">{formatEuro(m.ueberschuss)}</td>
+                  <td className="border border-line px-3 py-2">{MONATE[m.monat - 1]}</td>
+                  <td className="border border-line px-3 py-2 text-right tnum">{formatEuro(m.einnahmen)}</td>
+                  <td className="border border-line px-3 py-2 text-right tnum">{formatEuro(m.ausgaben)}</td>
+                  <td className="border border-line px-3 py-2 text-right tnum">{formatEuro(m.ueberschuss)}</td>
                 </tr>
               ))}
-              <tr className="bg-gray-200 font-bold">
-                <td className="border px-3 py-2">Gesamt</td>
-                <td className="border px-3 py-2 text-right">{formatEuro(jahresSumme.einnahmen)}</td>
-                <td className="border px-3 py-2 text-right">{formatEuro(jahresSumme.ausgaben)}</td>
-                <td className="border px-3 py-2 text-right">{formatEuro(jahresSumme.ueberschuss)}</td>
+              <tr className="bg-surface-2 font-bold text-ink">
+                <td className="border border-line px-3 py-2">Gesamt</td>
+                <td className="border border-line px-3 py-2 text-right tnum">{formatEuro(jahresSumme.einnahmen)}</td>
+                <td className="border border-line px-3 py-2 text-right tnum">{formatEuro(jahresSumme.ausgaben)}</td>
+                <td className="border border-line px-3 py-2 text-right tnum">{formatEuro(jahresSumme.ueberschuss)}</td>
               </tr>
             </tbody>
           </table>

@@ -37,7 +37,7 @@ function Feld({
 }) {
   return (
     <div className={breit ? "col-span-2" : ""}>
-      <label className="block text-xs font-medium text-gray-500 mb-1">{label}</label>
+      <label className="block text-xs font-medium text-muted mb-1">{label}</label>
       <input
         type={type}
         value={value}
@@ -95,12 +95,12 @@ export default function UnternehmenPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Unternehmen</h1>
-          <p className="text-sm text-gray-500 mt-1">Absenderprofile für deine Rechnungen.</p>
+          <p className="text-sm text-muted mt-1">Absenderprofile für deine Rechnungen.</p>
         </div>
         {!entwurf && (
           <button
             onClick={() => setEntwurf(leeresProfil())}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium"
+            className="bg-brand text-white px-4 py-2 rounded-lg hover:bg-brand-deep text-sm font-medium"
           >
             + Neues Profil
           </button>
@@ -109,7 +109,7 @@ export default function UnternehmenPage() {
 
       {/* Formular */}
       {entwurf && (
-        <section className="bg-white border rounded-xl p-6 shadow-sm space-y-5">
+        <section className="bg-surface border rounded-xl p-6 shadow-sm space-y-5">
           <h2 className="text-base font-semibold">
             {profile.some((p) => p.id === entwurf.id) ? "Profil bearbeiten" : "Neues Profil"}
           </h2>
@@ -155,7 +155,7 @@ export default function UnternehmenPage() {
           </div>
 
           <div className="border-t pt-4 space-y-3">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Rechnungsdesign</p>
+            <p className="text-xs font-semibold text-muted uppercase tracking-wide">Rechnungsdesign</p>
             <div className="grid grid-cols-2 gap-3">
               {DESIGNS.map((d) => {
                 const aktiv = (entwurf.design ?? "klassisch") === d.id
@@ -165,33 +165,33 @@ export default function UnternehmenPage() {
                     type="button"
                     onClick={() => { set("design", d.id); set("akzentfarbe", d.standardfarbe) }}
                     className={`text-left border rounded-lg p-3 transition-colors ${
-                      aktiv ? "border-blue-500 ring-2 ring-blue-100 bg-blue-50" : "border-gray-200 hover:border-gray-300"
+                      aktiv ? "border-brand ring-2 ring-brand-tint bg-brand-tint" : "border-line hover:border-line"
                     }`}
                   >
                     <div className="flex items-center gap-2 mb-1">
                       <span className="w-3 h-3 rounded-full" style={{ backgroundColor: d.standardfarbe }} />
                       <span className="text-sm font-semibold">{d.label}</span>
                     </div>
-                    <span className="text-xs text-gray-500 leading-tight block">{d.beschreibung}</span>
+                    <span className="text-xs text-muted leading-tight block">{d.beschreibung}</span>
                   </button>
                 )
               })}
             </div>
             <div className="flex items-center gap-3">
-              <label className="text-xs font-medium text-gray-500">Akzentfarbe</label>
+              <label className="text-xs font-medium text-muted">Akzentfarbe</label>
               <input
                 type="color"
                 value={entwurf.akzentfarbe ?? "#2563eb"}
                 onChange={(e) => set("akzentfarbe", e.target.value)}
                 className="h-8 w-12 border rounded cursor-pointer"
               />
-              <span className="text-xs text-gray-400">{entwurf.akzentfarbe}</span>
+              <span className="text-xs text-faint">{entwurf.akzentfarbe}</span>
             </div>
           </div>
 
           <div className="border-t pt-4 space-y-4">
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Einleitungstext (optional)</label>
+              <label className="block text-xs font-medium text-muted mb-1">Einleitungstext (optional)</label>
               <textarea
                 value={entwurf.einleitungstext ?? ""}
                 onChange={(e) => set("einleitungstext", e.target.value)}
@@ -201,7 +201,7 @@ export default function UnternehmenPage() {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Fußtext (optional)</label>
+              <label className="block text-xs font-medium text-muted mb-1">Fußtext (optional)</label>
               <textarea
                 value={entwurf.fusstext ?? ""}
                 onChange={(e) => set("fusstext", e.target.value)}
@@ -210,15 +210,15 @@ export default function UnternehmenPage() {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Logo (optional)</label>
+              <label className="block text-xs font-medium text-muted mb-1">Logo (optional)</label>
               <div className="flex items-center gap-3">
                 {entwurf.logo && (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={entwurf.logo} alt="Logo" className="h-12 border rounded bg-white object-contain px-2" />
+                  <img src={entwurf.logo} alt="Logo" className="h-12 border rounded bg-surface object-contain px-2" />
                 )}
                 <input type="file" accept="image/png,image/jpeg" onChange={logoWaehlen} className="text-sm" />
                 {entwurf.logo && (
-                  <button onClick={() => set("logo", undefined)} className="text-xs text-red-500 hover:text-red-700">
+                  <button onClick={() => set("logo", undefined)} className="text-xs text-neg hover:text-neg">
                     entfernen
                   </button>
                 )}
@@ -236,10 +236,10 @@ export default function UnternehmenPage() {
           </div>
 
           <div className="flex gap-2 pt-2">
-            <button onClick={speichern} className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium">
+            <button onClick={speichern} className="bg-brand text-white px-5 py-2 rounded-lg hover:bg-brand-deep text-sm font-medium">
               Speichern
             </button>
-            <button onClick={() => setEntwurf(null)} className="bg-gray-100 text-gray-700 px-5 py-2 rounded-lg hover:bg-gray-200 text-sm font-medium">
+            <button onClick={() => setEntwurf(null)} className="bg-surface-2 text-ink-soft px-5 py-2 rounded-lg hover:bg-line text-sm font-medium">
               Abbrechen
             </button>
           </div>
@@ -249,17 +249,17 @@ export default function UnternehmenPage() {
       {/* Liste */}
       {!entwurf && (
         profile.length === 0 ? (
-          <div className="bg-white border-2 border-dashed border-gray-200 rounded-2xl p-12 text-center">
+          <div className="bg-surface border-2 border-dashed border-line rounded-2xl p-12 text-center">
             <div className="text-4xl mb-3">🏢</div>
-            <p className="text-gray-500 text-sm mb-6">Noch kein Unternehmensprofil. Lege das erste an, um Rechnungen zu erstellen.</p>
-            <button onClick={() => setEntwurf(leeresProfil())} className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium">
+            <p className="text-muted text-sm mb-6">Noch kein Unternehmensprofil. Lege das erste an, um Rechnungen zu erstellen.</p>
+            <button onClick={() => setEntwurf(leeresProfil())} className="bg-brand text-white px-5 py-2 rounded-lg hover:bg-brand-deep text-sm font-medium">
               + Erstes Profil anlegen
             </button>
           </div>
         ) : (
           <div className="space-y-3">
             {profile.map((p) => (
-              <div key={p.id} className="bg-white border rounded-xl p-5 shadow-sm flex items-start justify-between">
+              <div key={p.id} className="bg-surface border rounded-xl p-5 shadow-sm flex items-start justify-between">
                 <div className="flex items-start gap-4">
                   {p.logo && (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -268,25 +268,25 @@ export default function UnternehmenPage() {
                   <div>
                     <div className="flex items-center gap-2">
                       <h3 className="font-semibold">{p.name}</h3>
-                      {p.istStandard && <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">Standard</span>}
-                      {p.kleinunternehmer && <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">§19</span>}
-                      <span className="text-xs text-gray-500 flex items-center gap-1">
+                      {p.istStandard && <span className="text-xs bg-brand-tint text-brand-ink px-2 py-0.5 rounded-full">Standard</span>}
+                      {p.kleinunternehmer && <span className="text-xs bg-surface-2 text-muted px-2 py-0.5 rounded-full">§19</span>}
+                      <span className="text-xs text-muted flex items-center gap-1">
                         <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: p.akzentfarbe ?? "#2563eb" }} />
                         {DESIGNS.find((d) => d.id === (p.design ?? "klassisch"))?.label}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-600">{p.firmenname}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">
+                    <p className="text-sm text-muted">{p.firmenname}</p>
+                    <p className="text-xs text-faint mt-0.5">
                       {[p.strasse, [p.plz, p.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ")}
                     </p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-faint">
                       Nächste Rechnungs-Nr.: {p.rechnungsnummerPrefix}{String(p.naechsteRechnungsnummer).padStart(p.rechnungsnummerStellen, "0")}
                     </p>
                   </div>
                 </div>
                 <div className="flex gap-3 text-sm shrink-0">
-                  <button onClick={() => setEntwurf(p)} className="text-blue-600 hover:underline">Bearbeiten</button>
-                  <button onClick={() => loeschen(p)} className="text-red-500 hover:underline">Löschen</button>
+                  <button onClick={() => setEntwurf(p)} className="text-brand hover:underline">Bearbeiten</button>
+                  <button onClick={() => loeschen(p)} className="text-neg hover:underline">Löschen</button>
                 </div>
               </div>
             ))}

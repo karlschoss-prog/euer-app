@@ -17,7 +17,7 @@ function Feld({
 }) {
   return (
     <div className={breit ? "col-span-2" : ""}>
-      <label className="block text-xs font-medium text-gray-500 mb-1">{label}</label>
+      <label className="block text-xs font-medium text-muted mb-1">{label}</label>
       <input
         value={value}
         placeholder={placeholder}
@@ -68,12 +68,12 @@ export default function KundenPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Kunden</h1>
-          <p className="text-sm text-gray-500 mt-1">Dein Adressbuch für Rechnungen.</p>
+          <p className="text-sm text-muted mt-1">Dein Adressbuch für Rechnungen.</p>
         </div>
         {!entwurf && (
           <button
             onClick={() => setEntwurf(leererKunde())}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium"
+            className="bg-brand text-white px-4 py-2 rounded-lg hover:bg-brand-deep text-sm font-medium"
           >
             + Neuer Kunde
           </button>
@@ -81,7 +81,7 @@ export default function KundenPage() {
       </div>
 
       {entwurf && (
-        <section className="bg-white border rounded-xl p-6 shadow-sm space-y-4">
+        <section className="bg-surface border rounded-xl p-6 shadow-sm space-y-4">
           <h2 className="text-base font-semibold">
             {kunden.some((k) => k.id === entwurf.id) ? "Kunde bearbeiten" : "Neuer Kunde"}
           </h2>
@@ -95,7 +95,7 @@ export default function KundenPage() {
             <Feld label="Land" value={entwurf.land ?? ""} onChange={(v) => set("land", v)} />
             <Feld label="USt-IdNr. (für B2B)" value={entwurf.ustIdNr ?? ""} onChange={(v) => set("ustIdNr", v)} />
             <div className="col-span-2">
-              <label className="block text-xs font-medium text-gray-500 mb-1">Notiz</label>
+              <label className="block text-xs font-medium text-muted mb-1">Notiz</label>
               <textarea
                 value={entwurf.notiz ?? ""}
                 onChange={(e) => set("notiz", e.target.value)}
@@ -105,18 +105,18 @@ export default function KundenPage() {
             </div>
           </div>
           <div className="flex gap-2 pt-1">
-            <button onClick={speichern} className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium">Speichern</button>
-            <button onClick={() => setEntwurf(null)} className="bg-gray-100 text-gray-700 px-5 py-2 rounded-lg hover:bg-gray-200 text-sm font-medium">Abbrechen</button>
+            <button onClick={speichern} className="bg-brand text-white px-5 py-2 rounded-lg hover:bg-brand-deep text-sm font-medium">Speichern</button>
+            <button onClick={() => setEntwurf(null)} className="bg-surface-2 text-ink-soft px-5 py-2 rounded-lg hover:bg-line text-sm font-medium">Abbrechen</button>
           </div>
         </section>
       )}
 
       {!entwurf && (
         kunden.length === 0 ? (
-          <div className="bg-white border-2 border-dashed border-gray-200 rounded-2xl p-12 text-center">
+          <div className="bg-surface border-2 border-dashed border-line rounded-2xl p-12 text-center">
             <div className="text-4xl mb-3">👥</div>
-            <p className="text-gray-500 text-sm mb-6">Noch keine Kunden gespeichert.</p>
-            <button onClick={() => setEntwurf(leererKunde())} className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium">
+            <p className="text-muted text-sm mb-6">Noch keine Kunden gespeichert.</p>
+            <button onClick={() => setEntwurf(leererKunde())} className="bg-brand text-white px-5 py-2 rounded-lg hover:bg-brand-deep text-sm font-medium">
               + Ersten Kunden anlegen
             </button>
           </div>
@@ -130,17 +130,17 @@ export default function KundenPage() {
             />
             <div className="space-y-2">
               {gefiltert.map((k) => (
-                <div key={k.id} className="bg-white border rounded-xl p-4 shadow-sm flex items-start justify-between">
+                <div key={k.id} className="bg-surface border rounded-xl p-4 shadow-sm flex items-start justify-between">
                   <div>
                     <h3 className="font-semibold text-sm">{k.name}</h3>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-muted">
                       {[k.ansprechpartner, k.strasse, [k.plz, k.ort].filter(Boolean).join(" ")].filter(Boolean).join(" · ")}
                     </p>
-                    {k.email && <p className="text-xs text-gray-400">{k.email}</p>}
+                    {k.email && <p className="text-xs text-faint">{k.email}</p>}
                   </div>
                   <div className="flex gap-3 text-sm shrink-0">
-                    <button onClick={() => setEntwurf(k)} className="text-blue-600 hover:underline">Bearbeiten</button>
-                    <button onClick={() => loeschen(k)} className="text-red-500 hover:underline">Löschen</button>
+                    <button onClick={() => setEntwurf(k)} className="text-brand hover:underline">Bearbeiten</button>
+                    <button onClick={() => loeschen(k)} className="text-neg hover:underline">Löschen</button>
                   </div>
                 </div>
               ))}

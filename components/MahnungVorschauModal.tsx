@@ -33,32 +33,32 @@ export default function MahnungVorschauModal({ mahnung, rechnung, onClose }: Pro
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={onClose}>
       <div
-        className="bg-white rounded-xl shadow-xl w-full max-w-3xl h-[90vh] flex flex-col overflow-hidden"
+        className="bg-surface border border-line rounded-2xl shadow-card-lg w-full max-w-3xl h-[90vh] flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-5 py-3 border-b shrink-0">
-          <h2 className="font-semibold text-sm">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-line shrink-0">
+          <h2 className="font-semibold text-sm text-ink">
             Vorschau — {mahnStufeConfig(mahnung.stufe).label} zu Rechnung {rechnung.rechnungsnummer}
           </h2>
           <div className="flex items-center gap-3">
             <button
               onClick={() => erzeugeMahnungPdf(mahnung, rechnung)}
-              className="bg-blue-600 text-white px-4 py-1.5 rounded-lg hover:bg-blue-700 text-xs font-semibold"
+              className="bg-brand text-white px-4 py-1.5 rounded-lg hover:bg-brand-deep text-xs font-semibold"
             >
               PDF herunterladen
             </button>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-700 text-xl leading-none">×</button>
+            <button onClick={onClose} className="text-faint hover:text-ink text-xl leading-none">×</button>
           </div>
         </div>
-        <div className="flex-1 bg-gray-100">
+        <div className="flex-1 bg-surface-2">
           {fehler ? (
-            <div className="h-full flex items-center justify-center text-sm text-red-600">
+            <div className="h-full flex items-center justify-center text-sm text-neg">
               Vorschau konnte nicht erstellt werden.
             </div>
           ) : url ? (
             <iframe src={url} title="Mahnungsvorschau" className="w-full h-full" />
           ) : (
-            <div className="h-full flex items-center justify-center text-sm text-gray-400">
+            <div className="h-full flex items-center justify-center text-sm text-faint">
               Vorschau wird erstellt…
             </div>
           )}

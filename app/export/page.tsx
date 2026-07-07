@@ -128,7 +128,7 @@ function ExportContent() {
       {/* Zeitraumauswahl */}
       <div className="flex gap-3 items-end">
         <div>
-          <label className="block text-xs font-medium text-gray-500 mb-1">Zeitraum</label>
+          <label className="block text-xs font-medium text-muted mb-1">Zeitraum</label>
           <select
             value={monat}
             onChange={(e) => setMonat(parseInt(e.target.value))}
@@ -141,7 +141,7 @@ function ExportContent() {
           </select>
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-500 mb-1">Jahr</label>
+          <label className="block text-xs font-medium text-muted mb-1">Jahr</label>
           <input
             type="number"
             value={jahr}
@@ -152,43 +152,43 @@ function ExportContent() {
       </div>
 
       {/* Zusammenfassung + PDF-Button */}
-      <div className="bg-white border rounded-xl shadow-sm p-6">
-        <h2 className="text-base font-semibold text-gray-700 mb-4">{titelZeitraum}</h2>
+      <div className="bg-surface border rounded-xl shadow-sm p-6">
+        <h2 className="text-base font-semibold text-ink-soft mb-4">{titelZeitraum}</h2>
         <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3">
-            <p className="text-xs text-green-700 font-medium">Einnahmen</p>
-            <p className="text-xl font-bold text-green-800">{formatEuro(displayEin)}</p>
-            <p className="text-xs text-green-600 mt-0.5">{einnahmen.length} Belege</p>
+          <div className="bg-pos-tint border border-pos-line rounded-lg px-4 py-3">
+            <p className="text-xs text-pos font-medium">Einnahmen</p>
+            <p className="text-xl font-bold text-pos">{formatEuro(displayEin)}</p>
+            <p className="text-xs text-pos mt-0.5">{einnahmen.length} Belege</p>
           </div>
-          <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3">
-            <p className="text-xs text-red-700 font-medium">Ausgaben</p>
-            <p className="text-xl font-bold text-red-800">{formatEuro(displayAus)}</p>
-            <p className="text-xs text-red-600 mt-0.5">{ausgaben.length} Belege</p>
+          <div className="bg-neg-tint border border-neg-line rounded-lg px-4 py-3">
+            <p className="text-xs text-neg font-medium">Ausgaben</p>
+            <p className="text-xl font-bold text-neg">{formatEuro(displayAus)}</p>
+            <p className="text-xs text-neg mt-0.5">{ausgaben.length} Belege</p>
           </div>
-          <div className={`border rounded-lg px-4 py-3 ${displayUeberschuss >= 0 ? "bg-blue-50 border-blue-200" : "bg-orange-50 border-orange-200"}`}>
-            <p className={`text-xs font-medium ${displayUeberschuss >= 0 ? "text-blue-700" : "text-orange-700"}`}>Überschuss</p>
-            <p className={`text-xl font-bold ${displayUeberschuss >= 0 ? "text-blue-800" : "text-orange-800"}`}>{formatEuro(displayUeberschuss)}</p>
+          <div className={`border rounded-lg px-4 py-3 ${displayUeberschuss >= 0 ? "bg-brand-tint border-line" : "bg-warn-tint border-warn-line"}`}>
+            <p className={`text-xs font-medium ${displayUeberschuss >= 0 ? "text-brand-ink" : "text-warn"}`}>Überschuss</p>
+            <p className={`text-xl font-bold ${displayUeberschuss >= 0 ? "text-brand-ink" : "text-warn"}`}>{formatEuro(displayUeberschuss)}</p>
           </div>
         </div>
 
         {hatDaten ? (
           <PdfExport belege={alleBelege} monat={monat} jahr={jahr} modus={monat === 0 ? "jahr" : "monat"} />
         ) : (
-          <p className="text-sm text-gray-400 italic">Keine Belege für diesen Zeitraum vorhanden.</p>
+          <p className="text-sm text-faint italic">Keine Belege für diesen Zeitraum vorhanden.</p>
         )}
       </div>
 
       {/* Belege-Details — kollabierbar */}
       {einnahmen.length > 0 && (
-        <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-surface border rounded-xl shadow-sm overflow-hidden">
           <button
             onClick={() => setEinnahmenAufgeklappt((v) => !v)}
-            className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors"
+            className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-surface-2 transition-colors"
           >
-            <span className="font-semibold text-sm text-green-700">
+            <span className="font-semibold text-sm text-pos">
               Einnahmen — {einnahmen.length} {einnahmen.length === 1 ? "Beleg" : "Belege"}
             </span>
-            <span className="text-gray-400 text-sm">{einnahmenAufgeklappt ? "▲" : "▼"}</span>
+            <span className="text-faint text-sm">{einnahmenAufgeklappt ? "▲" : "▼"}</span>
           </button>
           {einnahmenAufgeklappt && (
             <div className="px-5 pb-5 border-t">
@@ -207,15 +207,15 @@ function ExportContent() {
       )}
 
       {ausgaben.length > 0 && (
-        <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-surface border rounded-xl shadow-sm overflow-hidden">
           <button
             onClick={() => setAusgabenAufgeklappt((v) => !v)}
-            className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors"
+            className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-surface-2 transition-colors"
           >
-            <span className="font-semibold text-sm text-red-700">
+            <span className="font-semibold text-sm text-neg">
               Ausgaben — {ausgaben.length} {ausgaben.length === 1 ? "Beleg" : "Belege"}
             </span>
-            <span className="text-gray-400 text-sm">{ausgabenAufgeklappt ? "▲" : "▼"}</span>
+            <span className="text-faint text-sm">{ausgabenAufgeklappt ? "▲" : "▼"}</span>
           </button>
           {ausgabenAufgeklappt && (
             <div className="px-5 pb-5 border-t">

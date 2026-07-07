@@ -86,9 +86,9 @@ export default function RechnungenPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Rechnungen</h1>
-          <p className="text-sm text-gray-500 mt-1">Erstellen, als PDF herunterladen und in der EÜR verbuchen.</p>
+          <p className="text-sm text-muted mt-1">Erstellen, als PDF herunterladen und in der EÜR verbuchen.</p>
         </div>
-        <Link href="/rechnungen/neu" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium">
+        <Link href="/rechnungen/neu" className="bg-brand text-white px-4 py-2 rounded-lg hover:bg-brand-deep text-sm font-medium">
           + Neue Rechnung
         </Link>
       </div>
@@ -102,30 +102,30 @@ export default function RechnungenPage() {
 
       {/* Offene Forderungen (Soll) */}
       {rechnungen.length > 0 && (
-        <div className="bg-orange-50 border border-orange-200 rounded-xl px-5 py-4 flex items-center justify-between">
+        <div className="bg-warn-tint border border-warn-line rounded-xl px-5 py-4 flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold text-orange-700 uppercase tracking-wide">Offene Forderungen (Soll)</p>
-            <p className="text-xs text-orange-600 mt-0.5">
+            <p className="text-xs font-semibold text-warn uppercase tracking-wide">Offene Forderungen (Soll)</p>
+            <p className="text-xs text-warn mt-0.5">
               {offene.length} {offene.length === 1 ? "unbezahlte Rechnung" : "unbezahlte Rechnungen"} — noch nicht in der EÜR verbucht
             </p>
           </div>
-          <span className="text-2xl font-bold text-orange-800">{formatEuro(offeneSumme)}</span>
+          <span className="text-2xl font-bold text-warn">{formatEuro(offeneSumme)}</span>
         </div>
       )}
 
       {gefiltert.length === 0 ? (
-        <div className="bg-white border-2 border-dashed border-gray-200 rounded-2xl p-12 text-center">
+        <div className="bg-surface border-2 border-dashed border-line rounded-2xl p-12 text-center">
           <div className="text-4xl mb-3">🧾</div>
-          <p className="text-gray-500 text-sm mb-6">Noch keine Rechnungen erstellt.</p>
-          <Link href="/rechnungen/neu" className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium">
+          <p className="text-muted text-sm mb-6">Noch keine Rechnungen erstellt.</p>
+          <Link href="/rechnungen/neu" className="bg-brand text-white px-5 py-2 rounded-lg hover:bg-brand-deep text-sm font-medium">
             + Erste Rechnung erstellen
           </Link>
         </div>
       ) : (
-        <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-surface border rounded-xl shadow-sm overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50 text-left text-gray-500">
+              <tr className="bg-surface-2 text-left text-muted">
                 <th className="px-4 py-3 font-medium">Nummer</th>
                 <th className="px-4 py-3 font-medium">Datum</th>
                 <th className="px-4 py-3 font-medium">Empfänger</th>
@@ -139,11 +139,11 @@ export default function RechnungenPage() {
               {gefiltert.map((r) => {
                 const { brutto } = rechnungSummen(r.positionen, r.kleinunternehmer)
                 return (
-                  <tr key={r.id} className="hover:bg-gray-50">
+                  <tr key={r.id} className="hover:bg-surface-2">
                     <td className="px-4 py-3 font-medium">{r.rechnungsnummer}</td>
-                    <td className="px-4 py-3 text-gray-500">{r.rechnungsdatum}</td>
+                    <td className="px-4 py-3 text-muted">{r.rechnungsdatum}</td>
                     <td className="px-4 py-3">{r.empfaenger.name}</td>
-                    <td className="px-4 py-3 text-gray-500 hidden md:table-cell">{profilName(r.profilId)}</td>
+                    <td className="px-4 py-3 text-muted hidden md:table-cell">{profilName(r.profilId)}</td>
                     <td className="px-4 py-3 text-right font-medium">{formatEuro(brutto)}</td>
                     <td className="px-4 py-3">
                       <button
@@ -151,8 +151,8 @@ export default function RechnungenPage() {
                         title={r.status === "bezahlt" ? "Auf „offen“ zurücksetzen" : "Als bezahlt verbuchen"}
                         className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full border transition-colors cursor-pointer ${
                           r.status === "bezahlt"
-                            ? "bg-green-100 text-green-700 border-green-200 hover:bg-green-200"
-                            : "bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-200"
+                            ? "bg-pos-tint text-pos border-pos-line hover:bg-pos-tint"
+                            : "bg-warn-tint text-warn border-warn-line hover:bg-warn-tint"
                         }`}
                       >
                         {r.status === "bezahlt" ? "Bezahlt" : "Offen"}
@@ -161,10 +161,10 @@ export default function RechnungenPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex gap-3 justify-end text-xs">
-                        <button onClick={() => setVorschau(r)} className="text-blue-600 hover:underline">Vorschau</button>
-                        <button onClick={() => erzeugeRechnungPdf(r)} className="text-blue-600 hover:underline">PDF</button>
-                        <Link href={`/rechnungen/neu?id=${r.id}`} className="text-gray-600 hover:underline">Bearbeiten</Link>
-                        <button onClick={() => loeschen(r)} className="text-red-500 hover:underline">Löschen</button>
+                        <button onClick={() => setVorschau(r)} className="text-brand hover:underline">Vorschau</button>
+                        <button onClick={() => erzeugeRechnungPdf(r)} className="text-brand hover:underline">PDF</button>
+                        <Link href={`/rechnungen/neu?id=${r.id}`} className="text-muted hover:underline">Bearbeiten</Link>
+                        <button onClick={() => loeschen(r)} className="text-neg hover:underline">Löschen</button>
                       </div>
                     </td>
                   </tr>
@@ -180,13 +180,13 @@ export default function RechnungenPage() {
       {/* Zahlungseingang-Datum */}
       {zahlModal && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={() => setZahlModal(null)}>
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-surface rounded-xl shadow-xl w-full max-w-sm p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
             <h2 className="text-base font-semibold">Zahlungseingang verbuchen</h2>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted">
               Rechnung {zahlModal.rechnungsnummer} — wann ist das Geld gekommen? Erst dann wird die Einnahme in der EÜR erfasst.
             </p>
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Zahlungsdatum</label>
+              <label className="block text-xs font-medium text-muted mb-1">Zahlungsdatum</label>
               <input
                 type="date"
                 value={zahlDatumIso}
@@ -198,7 +198,7 @@ export default function RechnungenPage() {
               <button onClick={zahlungBestaetigen} className="bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 text-sm font-medium">
                 Als bezahlt verbuchen
               </button>
-              <button onClick={() => setZahlModal(null)} className="bg-gray-100 text-gray-700 px-5 py-2 rounded-lg hover:bg-gray-200 text-sm font-medium">
+              <button onClick={() => setZahlModal(null)} className="bg-surface-2 text-ink-soft px-5 py-2 rounded-lg hover:bg-line text-sm font-medium">
                 Abbrechen
               </button>
             </div>

@@ -118,7 +118,7 @@ export default function AusgabenPage() {
         <KleinunternehmerWarnung jahresEinnahmen={jahresEinnahmen} jahr={jahr} />
       )}
 
-      <section className="bg-white border rounded-lg p-6">
+      <section className="bg-surface border rounded-lg p-6">
         <h2 className="text-lg font-semibold mb-4">Neue Ausgabe</h2>
         <BelegForm
           key={formKey}
@@ -129,7 +129,7 @@ export default function AusgabenPage() {
         />
       </section>
 
-      <section className="bg-white border rounded-lg p-6">
+      <section className="bg-surface border rounded-lg p-6">
         <div className="flex justify-between items-center mb-4">
           <div>
             <h2 className="text-lg font-semibold">
@@ -137,12 +137,12 @@ export default function AusgabenPage() {
             </h2>
             <button
               onClick={() => setAlleAnzeigen((v) => !v)}
-              className="text-xs text-blue-600 hover:underline mt-0.5"
+              className="text-xs text-brand hover:underline mt-0.5"
             >
               {alleAnzeigen ? "← Nur aktuellen Monat anzeigen" : "Alle Ausgaben anzeigen →"}
             </button>
           </div>
-          <span className="text-sm font-medium text-red-700">Gesamt: {formatEuro(gesamt)}</span>
+          <span className="text-sm font-medium text-neg">Gesamt: {formatEuro(gesamt)}</span>
         </div>
         <BelegTabelle
           belege={anzeigebelege}

@@ -547,7 +547,7 @@ export default function RechnungPdf({ rechnung, className, label = "PDF herunter
       onClick={() => erzeugeRechnungPdf(rechnung)}
       className={
         className ??
-        "bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-semibold flex items-center gap-2"
+        "bg-brand text-white px-4 py-2 rounded-lg hover:bg-brand-deep text-sm font-semibold flex items-center gap-2 shadow-card"
       }
     >
       <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">

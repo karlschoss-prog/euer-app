@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import ThemeToggle from "@/components/ThemeToggle"
 
 const LINKS = [
   {
@@ -101,38 +102,51 @@ export default function Sidebar() {
   const pathname = usePathname()
 
   return (
-    <aside className="w-56 min-h-screen bg-white border-r flex flex-col shrink-0">
-      {/* Logo */}
-      <div className="px-5 pt-6 pb-5 border-b">
-        <Link href="/" className="font-bold text-gray-900 text-lg tracking-tight">EÜR-App</Link>
-        <p className="text-xs text-gray-400 mt-0.5">Buchführung leicht gemacht</p>
-      </div>
+    <aside className="w-60 min-h-screen bg-surface border-r border-line flex flex-col shrink-0 sticky top-0 self-start h-screen">
+      {/* Marke */}
+      <Link href="/" className="flex items-center gap-3 px-5 pt-6 pb-5">
+        <svg viewBox="0 0 32 32" aria-hidden="true" className="w-9 h-9 rounded-[9px] shadow-[0_4px_10px_rgba(37,99,235,0.32)]">
+          <defs>
+            <linearGradient id="sb-euro" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="#3b82f6" />
+              <stop offset="1" stopColor="#1d4ed8" />
+            </linearGradient>
+          </defs>
+          <rect width="32" height="32" rx="7" fill="url(#sb-euro)" />
+          <text x="16" y="16.5" textAnchor="middle" dominantBaseline="central"
+                fontFamily="Arial, sans-serif" fontSize="22" fontWeight="700" fill="#fff">€</text>
+        </svg>
+        <span className="font-bold text-ink text-lg tracking-tight">E<span className="text-brand">Ü</span>R-App</span>
+      </Link>
 
       {/* Navigation */}
-      <nav className="flex-1 py-4 px-3 space-y-0.5">
+      <nav className="flex-1 py-3 px-3 space-y-0.5">
         {LINKS.map((l) => {
           const active = l.href === "/" ? pathname === "/" : pathname.startsWith(l.href)
           return (
             <Link
               key={l.href}
               href={l.href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors ${
                 active
-                  ? "bg-blue-50 text-blue-700 font-semibold"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                  ? "bg-brand-tint text-brand-ink font-semibold"
+                  : "text-muted hover:bg-surface-2 hover:text-ink-soft"
               }`}
             >
-              <span className={active ? "text-blue-600" : "text-gray-400"}>{l.icon}</span>
+              <span className={active ? "text-brand" : "text-faint"}>{l.icon}</span>
               {l.label}
             </Link>
           )
         })}
       </nav>
 
-      {/* KU-Warnstufe */}
-      {/* Footer */}
-      <div className="px-5 py-4 border-t">
-        <p className="text-xs text-gray-400">{new Date().getFullYear()}</p>
+      {/* Footer: Modus-Umschalter + Status */}
+      <div className="px-5 py-4 border-t border-line flex flex-col gap-3">
+        <ThemeToggle />
+        <span className="inline-flex items-center gap-2 text-xs text-muted">
+          <span className="w-1.5 h-1.5 rounded-full bg-pos shadow-[0_0_0_3px_var(--pos-tint)]" />
+          Lokal gespeichert
+        </span>
       </div>
     </aside>
   )

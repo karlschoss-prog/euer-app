@@ -158,7 +158,7 @@ export default function DatenPage() {
       <div className="flex items-start justify-between">
         <h1 className="text-2xl font-bold">Backup & Daten</h1>
         <div className={`text-sm px-3 py-1.5 rounded-full font-medium ${
-          dringend ? "bg-orange-100 text-orange-700" : "bg-green-100 text-green-700"
+          dringend ? "bg-warn-tint text-warn" : "bg-pos-tint text-pos"
         }`}>
           {dringend ? "⚠ " : "✓ "}{backupText}
         </div>
@@ -166,14 +166,14 @@ export default function DatenPage() {
 
       {/* Automatisches Backup */}
       {fsSupported && (
-        <section className="bg-white border rounded-xl p-6 shadow-sm space-y-4">
+        <section className="bg-surface border rounded-xl p-6 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-semibold">Automatisches Backup</h2>
             {autoBackupDatei && (
               <span className={`text-xs px-2 py-1 rounded-full font-medium ${
                 autoBackupPermission === "granted"
-                  ? "bg-green-100 text-green-700"
-                  : "bg-orange-100 text-orange-700"
+                  ? "bg-pos-tint text-pos"
+                  : "bg-warn-tint text-warn"
               }`}>
                 {autoBackupPermission === "granted" ? "✓ Aktiv" : "⚠ Berechtigung nötig"}
               </span>
@@ -181,48 +181,48 @@ export default function DatenPage() {
           </div>
 
           {/* Erklärung — immer sichtbar */}
-          <div className="bg-blue-50 border border-blue-100 rounded-lg px-4 py-3 space-y-2">
-            <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide">So funktioniert's</p>
+          <div className="bg-brand-tint border border-line rounded-lg px-4 py-3 space-y-2">
+            <p className="text-xs font-semibold text-brand-ink uppercase tracking-wide">So funktioniert's</p>
             <ol className="space-y-1.5">
               {[
                 { n: "1", text: "Klicke auf \"Backup-Datei einrichten\" und wähle einen Speicherort (z. B. Dokumente/euer-backup.json)." },
                 { n: "2", text: "Ab sofort überschreibt die App diese Datei automatisch nach jeder Änderung — im Hintergrund, ohne Dialog." },
                 { n: "3", text: "Nach einem Browser-Neustart einmalig \"Berechtigung bestätigen\" klicken — dann läuft es wieder automatisch." },
               ].map(({ n, text }) => (
-                <li key={n} className="flex gap-2 text-xs text-blue-800">
-                  <span className="shrink-0 w-4 h-4 rounded-full bg-blue-200 text-blue-700 font-bold flex items-center justify-center text-[10px]">{n}</span>
+                <li key={n} className="flex gap-2 text-xs text-brand-ink">
+                  <span className="shrink-0 w-4 h-4 rounded-full bg-brand text-white font-bold flex items-center justify-center text-[10px]">{n}</span>
                   <span>{text}</span>
                 </li>
               ))}
             </ol>
-            <p className="text-xs text-blue-600 pt-0.5">Funktioniert in Chrome und Edge. Safari/Firefox: bitte manuellen Export nutzen.</p>
+            <p className="text-xs text-brand pt-0.5">Funktioniert in Chrome und Edge. Safari/Firefox: bitte manuellen Export nutzen.</p>
           </div>
 
           {autoBackupDatei ? (
-            <div className="bg-gray-50 border rounded-lg px-4 py-3 space-y-2">
+            <div className="bg-surface-2 border rounded-lg px-4 py-3 space-y-2">
               <div className="flex items-center gap-2 text-sm">
-                <span className="text-gray-400">📄</span>
-                <span className="font-medium text-gray-700">{autoBackupDatei}</span>
+                <span className="text-faint">📄</span>
+                <span className="font-medium text-ink-soft">{autoBackupDatei}</span>
               </div>
-              <p className="text-xs text-gray-400">{zeitstempelText(autoBackupTs)}</p>
+              <p className="text-xs text-faint">{zeitstempelText(autoBackupTs)}</p>
               <div className="flex gap-2 pt-1">
                 {autoBackupPermission !== "granted" && (
                   <button
                     onClick={handleBerechtigungErneuern}
-                    className="bg-blue-600 text-white px-4 py-1.5 rounded-lg hover:bg-blue-700 text-xs font-medium"
+                    className="bg-brand text-white px-4 py-1.5 rounded-lg hover:bg-brand-deep text-xs font-medium"
                   >
                     Berechtigung bestätigen
                   </button>
                 )}
                 <button
                   onClick={handleAutoBackupEinrichten}
-                  className="bg-gray-100 text-gray-700 px-4 py-1.5 rounded-lg hover:bg-gray-200 text-xs font-medium"
+                  className="bg-surface-2 text-ink-soft px-4 py-1.5 rounded-lg hover:bg-line text-xs font-medium"
                 >
                   Andere Datei wählen
                 </button>
                 <button
                   onClick={handleAutoBackupEntfernen}
-                  className="text-red-500 hover:text-red-700 text-xs px-2"
+                  className="text-neg hover:text-neg text-xs px-2"
                 >
                   Deaktivieren
                 </button>
@@ -231,14 +231,14 @@ export default function DatenPage() {
           ) : (
             <button
               onClick={handleAutoBackupEinrichten}
-              className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium"
+              className="bg-brand text-white px-5 py-2 rounded-lg hover:bg-brand-deep text-sm font-medium"
             >
               Backup-Datei einrichten
             </button>
           )}
 
           {autoBackupPermission === "prompt" && autoBackupDatei && (
-            <p className="text-xs text-orange-600">
+            <p className="text-xs text-warn">
               Nach einem Browser-Neustart muss die Berechtigung einmalig bestätigt werden.
             </p>
           )}
@@ -246,9 +246,9 @@ export default function DatenPage() {
       )}
 
       {/* Manuelles Export */}
-      <section className="bg-white border rounded-xl p-6 shadow-sm space-y-3">
+      <section className="bg-surface border rounded-xl p-6 shadow-sm space-y-3">
         <h2 className="text-base font-semibold">Backup manuell exportieren</h2>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-muted">
           Speichert alle Belege und Vorlagen als JSON-Datei. Alle Daten liegen im Browser-LocalStorage
           und gehen beim Löschen des Browser-Caches verloren — regelmäßig sichern.
         </p>
@@ -261,27 +261,27 @@ export default function DatenPage() {
       </section>
 
       {/* Import */}
-      <section className="bg-white border rounded-xl p-6 shadow-sm space-y-3">
+      <section className="bg-surface border rounded-xl p-6 shadow-sm space-y-3">
         <h2 className="text-base font-semibold">Backup importieren</h2>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-muted">
           Stellt einen vorherigen Backup wieder her.{" "}
-          <strong className="text-gray-700">Alle vorhandenen Daten werden überschrieben.</strong>
+          <strong className="text-ink-soft">Alle vorhandenen Daten werden überschrieben.</strong>
         </p>
         <input ref={fileRef} type="file" accept=".json" onChange={handleImport} className="hidden" />
         <button
           onClick={() => { setImportStatus("idle"); fileRef.current?.click() }}
-          className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium"
+          className="bg-brand text-white px-5 py-2 rounded-lg hover:bg-brand-deep text-sm font-medium"
         >
           Backup-Datei auswählen
         </button>
         {importStatus === "ok" && (
-          <p className="text-sm text-green-700 font-medium">✓ Import erfolgreich — Seite wird neu geladen…</p>
+          <p className="text-sm text-pos font-medium">✓ Import erfolgreich — Seite wird neu geladen…</p>
         )}
         {importStatus === "fehler" && (
-          <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+          <div className="text-sm text-neg bg-neg-tint border border-neg-line rounded-lg px-3 py-2">
             <p className="font-medium">Import fehlgeschlagen</p>
             <p className="mt-0.5">{importFehler}</p>
-            <p className="mt-1 text-xs text-red-500">
+            <p className="mt-1 text-xs text-neg">
               Tipp: Auf dem Quellgerät erneut „Backup herunterladen“ und die Datei direkt (z. B. per AirDrop) übertragen — nicht den Inhalt kopieren/einfügen.
             </p>
           </div>
@@ -289,16 +289,16 @@ export default function DatenPage() {
       </section>
 
       {/* Vorlagen */}
-      <section className="bg-white border rounded-xl p-6 shadow-sm space-y-3">
+      <section className="bg-surface border rounded-xl p-6 shadow-sm space-y-3">
         <h2 className="text-base font-semibold">Gespeicherte Vorlagen</h2>
         {vorlagen.length === 0 ? (
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-faint">
             Noch keine Vorlagen. In der Einnahmen- oder Ausgaben-Tabelle auf ⭐ klicken.
           </p>
         ) : (
           <table className="w-full text-sm border-collapse">
             <thead>
-              <tr className="bg-gray-50 text-left">
+              <tr className="bg-surface-2 text-left">
                 <th className="border px-3 py-2">Name</th>
                 <th className="border px-3 py-2">Typ</th>
                 <th className="border px-3 py-2">Beschreibung</th>
@@ -307,14 +307,14 @@ export default function DatenPage() {
             </thead>
             <tbody>
               {vorlagen.map((v) => (
-                <tr key={v.id} className="hover:bg-gray-50">
+                <tr key={v.id} className="hover:bg-surface-2">
                   <td className="border px-3 py-2 font-medium">{v.name}</td>
-                  <td className="border px-3 py-2 capitalize text-gray-500">{v.typ}</td>
-                  <td className="border px-3 py-2 text-gray-600">{v.leistungsbeschreibung}</td>
+                  <td className="border px-3 py-2 capitalize text-muted">{v.typ}</td>
+                  <td className="border px-3 py-2 text-muted">{v.leistungsbeschreibung}</td>
                   <td className="border px-3 py-2">
                     <button
                       onClick={() => handleVorlageLoeschen(v.id, v.name)}
-                      className="text-xs text-red-500 hover:text-red-700"
+                      className="text-xs text-neg hover:text-neg"
                     >
                       Löschen
                     </button>
@@ -327,9 +327,9 @@ export default function DatenPage() {
       </section>
 
       {/* Gefahrenzone */}
-      <section className="bg-white border border-red-200 rounded-xl p-6 shadow-sm space-y-3">
-        <h2 className="text-base font-semibold text-red-700">Alle Daten löschen</h2>
-        <p className="text-sm text-gray-500">
+      <section className="bg-surface border border-neg-line rounded-xl p-6 shadow-sm space-y-3">
+        <h2 className="text-base font-semibold text-neg">Alle Daten löschen</h2>
+        <p className="text-sm text-muted">
           Setzt die App komplett zurück: Belege, Rechnungen, Kunden, Unternehmensprofile und Vorlagen
           werden unwiderruflich entfernt. Erstelle vorher ein Backup, falls du die Daten behalten möchtest.
         </p>

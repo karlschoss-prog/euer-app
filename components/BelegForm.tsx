@@ -116,12 +116,12 @@ export default function BelegForm({ typ, onSpeichern, initialData, vorlagen = []
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {typVorlagen.length > 0 && (
-        <div className="flex items-center gap-3 pb-3 mb-1 border-b">
-          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide shrink-0">Vorlage laden</span>
+        <div className="flex items-center gap-3 pb-3 mb-1 border-b border-line">
+          <span className="text-xs font-semibold text-faint uppercase tracking-wide shrink-0">Vorlage laden</span>
           <select
             defaultValue=""
             onChange={(e) => { if (e.target.value) ladeVorlage(e.target.value) }}
-            className="border rounded px-3 py-1.5 text-sm flex-1 max-w-xs"
+            className="bg-surface border border-line text-ink rounded-lg px-3 py-1.5 text-sm flex-1 max-w-xs"
           >
             <option value="">— auswählen —</option>
             {typVorlagen.map((v) => (
@@ -139,29 +139,29 @@ export default function BelegForm({ typ, onSpeichern, initialData, vorlagen = []
             value={datum}
             onChange={(e) => setDatum(e.target.value)}
             required
-            className="w-full border rounded px-3 py-2 text-sm"
+            className="w-full bg-surface border border-line text-ink rounded-lg px-3 py-2 text-sm placeholder:text-faint"
           />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">
-            Belegnummer <span className="text-gray-400 font-normal">(optional)</span>
+            Belegnummer <span className="text-faint font-normal">(optional)</span>
           </label>
           <input
             type="text"
             value={belegnummer}
             onChange={(e) => setBelegnummer(e.target.value)}
-            className="w-full border rounded px-3 py-2 text-sm"
+            className="w-full bg-surface border border-line text-ink rounded-lg px-3 py-2 text-sm placeholder:text-faint"
           />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">
-            {label} <span className="text-gray-400 font-normal">(optional)</span>
+            {label} <span className="text-faint font-normal">(optional)</span>
           </label>
           <input
             type="text"
             value={kundeLieferant}
             onChange={(e) => setKundeLieferant(e.target.value)}
-            className="w-full border rounded px-3 py-2 text-sm"
+            className="w-full bg-surface border border-line text-ink rounded-lg px-3 py-2 text-sm placeholder:text-faint"
           />
         </div>
         <div>
@@ -171,7 +171,7 @@ export default function BelegForm({ typ, onSpeichern, initialData, vorlagen = []
             value={leistung}
             onChange={(e) => setLeistung(e.target.value)}
             required
-            className="w-full border rounded px-3 py-2 text-sm"
+            className="w-full bg-surface border border-line text-ink rounded-lg px-3 py-2 text-sm placeholder:text-faint"
           />
         </div>
         <div>
@@ -183,7 +183,7 @@ export default function BelegForm({ typ, onSpeichern, initialData, vorlagen = []
             value={menge || ""}
             onChange={(e) => setMenge(parseFloat(e.target.value) || 0)}
             required
-            className="w-full border rounded px-3 py-2 text-sm"
+            className="w-full bg-surface border border-line text-ink rounded-lg px-3 py-2 text-sm placeholder:text-faint"
           />
         </div>
         <div>
@@ -196,7 +196,7 @@ export default function BelegForm({ typ, onSpeichern, initialData, vorlagen = []
             value={einzelpreisText}
             onChange={(e) => { setEinzelpreisText(e.target.value); setEinzelpreis(parsePreis(e.target.value)) }}
             required
-            className="w-full border rounded px-3 py-2 text-sm"
+            className="w-full bg-surface border border-line text-ink rounded-lg px-3 py-2 text-sm placeholder:text-faint"
           />
         </div>
         <div>
@@ -204,7 +204,7 @@ export default function BelegForm({ typ, onSpeichern, initialData, vorlagen = []
           <select
             value={mwstSatz}
             onChange={(e) => setMwstSatz(parseInt(e.target.value))}
-            className="w-full border rounded px-3 py-2 text-sm"
+            className="w-full bg-surface border border-line text-ink rounded-lg px-3 py-2 text-sm placeholder:text-faint"
           >
             <option value="19">19 %</option>
             {istAusgabe && <option value="7">7 %</option>}
@@ -219,32 +219,32 @@ export default function BelegForm({ typ, onSpeichern, initialData, vorlagen = []
             value={kategorie}
             onChange={(e) => setKategorie(e.target.value)}
             placeholder="Auswählen oder eingeben…"
-            className="w-full border rounded px-3 py-2 text-sm"
+            className="w-full bg-surface border border-line text-ink rounded-lg px-3 py-2 text-sm placeholder:text-faint"
           />
           <datalist id={listId}>
             {KATEGORIEN.map((k) => <option key={k} value={k} />)}
           </datalist>
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1 text-blue-700">
+          <label className="block text-sm font-medium mb-1 text-brand-ink">
             {istAusgabe ? "Netto (für EÜR)" : "Gesamtpreis Brutto"}
           </label>
           {istAusgabe ? (
             <div className="px-1 py-1">
-              <p className="text-2xl font-bold text-blue-700">{formatEuro(netto)}</p>
-              <p className="text-xs text-gray-500 mt-0.5">
+              <p className="text-2xl font-bold text-brand-ink tnum">{formatEuro(netto)}</p>
+              <p className="text-xs text-muted mt-0.5 tnum">
                 enth. MwSt {formatEuro(mwstBetrag)} · Brutto {formatEuro(brutto)}
               </p>
             </div>
           ) : (
-            <p className="px-1 py-2 text-2xl font-bold text-blue-700">{formatEuro(brutto)}</p>
+            <p className="px-1 py-2 text-2xl font-bold text-brand-ink tnum">{formatEuro(brutto)}</p>
           )}
         </div>
       </div>
 
       <button
         type="submit"
-        className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 text-sm font-medium"
+        className="bg-brand text-white px-6 py-2.5 rounded-lg hover:bg-brand-deep text-sm font-semibold shadow-card"
       >
         {istEdit ? "Änderungen speichern" : typ === "einnahme" ? "Einnahme speichern" : "Ausgabe speichern"}
       </button>

@@ -29,9 +29,9 @@ export default function NavBar() {
   }, [])
 
   return (
-    <nav className="bg-white border-b shadow-sm">
+    <nav className="bg-surface border-b shadow-sm">
       <div className="max-w-6xl mx-auto px-6 h-14 flex items-center gap-6">
-        <Link href="/" className="font-bold text-gray-900 text-base shrink-0">
+        <Link href="/" className="font-bold text-ink text-base shrink-0">
           EÜR-App
         </Link>
         <div className="flex gap-4 text-sm items-center flex-1">
@@ -43,8 +43,8 @@ export default function NavBar() {
                 href={l.href}
                 className={
                   active
-                    ? "text-gray-900 font-semibold border-b-2 border-blue-600 pb-0.5"
-                    : "text-gray-600 hover:text-gray-900"
+                    ? "text-ink font-semibold border-b-2 border-brand pb-0.5"
+                    : "text-muted hover:text-ink"
                 }
               >
                 {l.label}
@@ -57,8 +57,8 @@ export default function NavBar() {
             href="/"
             className={`text-xs px-3 py-1 rounded-full font-medium shrink-0 ${
               warnstufe === "kritisch"
-                ? "bg-red-100 text-red-700 hover:bg-red-200"
-                : "bg-orange-100 text-orange-700 hover:bg-orange-200"
+                ? "bg-neg-tint text-neg hover:bg-neg-tint"
+                : "bg-warn-tint text-warn hover:bg-warn-tint"
             }`}
           >
             {warnstufe === "kritisch" ? "⚠ Grenze überschritten" : "⚠ Grenze in Sichtweite"}

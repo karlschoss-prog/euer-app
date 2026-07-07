@@ -1,26 +1,144 @@
 @import "tailwindcss";
 
+/* Dunkelmodus wird über data-theme="dark" am <html> gesteuert (Umschalter + System-Default). */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* ---------- Farbtokens: Hell (Standard) ---------- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #eceff7;
+  --bg-2: #f4f7fd;
+  --surface: #ffffff;
+  --surface-2: #f4f7fd;
+  --ink: #0e1a2b;
+  --ink-soft: #334054;
+  --muted: #647084;
+  --faint: #97a2b4;
+  --line: #e4e9f2;
+  --line-strong: #d5dde9;
+
+  --brand: #2563eb;
+  --brand-deep: #1d4ed8;
+  --brand-tint: #e7f0ff;
+  --brand-ink: #1b3fae;
+
+  --pos: #15914b;
+  --pos-tint: #e7f7ee;
+  --pos-line: #bfe6cd;
+  --neg: #d81f4a;
+  --neg-tint: #fdeaef;
+  --neg-line: #f6c6d3;
+  --warn: #b45309;
+  --warn-tint: #fdf0e1;
+  --warn-line: #f6d8ac;
+
+  --shadow-sm: 0 1px 2px rgba(15, 27, 45, .06);
+  --shadow: 0 1px 2px rgba(15, 27, 45, .05), 0 8px 22px rgba(15, 27, 45, .07);
+  --shadow-lg: 0 2px 4px rgba(15, 27, 45, .05), 0 20px 46px rgba(29, 78, 216, .14);
 }
 
+/* ---------- Farbtokens: Dunkel ---------- */
+:root[data-theme="dark"] {
+  --bg: #070c16;
+  --bg-2: #0a1120;
+  --surface: #101a2c;
+  --surface-2: #0c1524;
+  --ink: #eaf0fb;
+  --ink-soft: #c2cde0;
+  --muted: #90a0b8;
+  --faint: #64728a;
+  --line: #1e2b43;
+  --line-strong: #2a3a56;
+
+  --brand: #4f8bf7;
+  --brand-deep: #3b82f6;
+  --brand-tint: #17263f;
+  --brand-ink: #9cc0ff;
+
+  --pos: #34d17f;
+  --pos-tint: #0f2a1c;
+  --pos-line: #1f4634;
+  --neg: #ff6b8a;
+  --neg-tint: #2c1420;
+  --neg-line: #4a2333;
+  --warn: #f0a24a;
+  --warn-tint: #2a1d0e;
+  --warn-line: #4a3316;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, .4);
+  --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 10px 26px rgba(0, 0, 0, .42);
+  --shadow-lg: 0 2px 6px rgba(0, 0, 0, .5), 0 24px 52px rgba(0, 0, 0, .55);
+}
+
+/* ---------- Tokens für Tailwind-Utilities verfügbar machen ---------- */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+
+  --color-brand: var(--brand);
+  --color-brand-deep: var(--brand-deep);
+  --color-brand-tint: var(--brand-tint);
+  --color-brand-ink: var(--brand-ink);
+
+  --color-pos: var(--pos);
+  --color-pos-tint: var(--pos-tint);
+  --color-pos-line: var(--pos-line);
+  --color-neg: var(--neg);
+  --color-neg-tint: var(--neg-tint);
+  --color-neg-line: var(--neg-line);
+  --color-warn: var(--warn);
+  --color-warn-tint: var(--warn-tint);
+  --color-warn-line: var(--warn-line);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ---------- Adaptive Schatten als Utilities ---------- */
+@utility shadow-card { box-shadow: var(--shadow); }
+@utility shadow-card-lg { box-shadow: var(--shadow-lg); }
+@utility shadow-card-sm { box-shadow: var(--shadow-sm); }
+
+/* ---------- Basis ---------- */
+/* Standard-Rahmenfarbe an das Theme binden, damit bloße `border`-Utilities passen. */
+@layer base {
+  *, ::before, ::after { border-color: var(--line); }
 }
 
+html { color-scheme: light; }
+html[data-theme="dark"] { color-scheme: dark; }
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+  color: var(--ink);
+  background:
+    radial-gradient(1100px 620px at 82% -10%, var(--bg-2), transparent 60%),
+    var(--bg);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Ziffern in Beträgen/Tabellen sauber ausrichten, wo gewünscht */
+.tnum { font-variant-numeric: tabular-nums; }
+
+::selection { background: var(--brand-tint); color: var(--brand-ink); }
+
+:where(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Dezente, theme-treue Scrollbars */
+* { scrollbar-color: var(--line-strong) transparent; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: .001ms !important; transition-duration: .001ms !important; }
 }

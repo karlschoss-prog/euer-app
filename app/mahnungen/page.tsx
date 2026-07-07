@@ -18,10 +18,10 @@ function heuteDe(): string {
 
 // Farbgebung der Stufen-Badges (eskalierend).
 const STUFE_FARBE: Record<MahnStufe, string> = {
-  zahlungserinnerung: "bg-amber-100 text-amber-700",
-  mahnung_1: "bg-orange-100 text-orange-700",
-  mahnung_2: "bg-red-100 text-red-700",
-  mahnverfahren: "bg-red-200 text-red-900",
+  zahlungserinnerung: "bg-warn-tint text-warn",
+  mahnung_1: "bg-warn-tint text-warn",
+  mahnung_2: "bg-neg-tint text-neg",
+  mahnverfahren: "bg-neg-tint text-neg",
 }
 
 interface VorschauState {
@@ -83,7 +83,7 @@ export default function MahnungenPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Mahnungen</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-muted mt-1">
             Überfällige Rechnungen anmahnen — die Original-Rechnung wird jeder Mahnung automatisch beigelegt.
           </p>
         </div>
@@ -102,13 +102,13 @@ export default function MahnungenPage() {
       </div>
 
       {relevante.length === 0 ? (
-        <div className="bg-white border-2 border-dashed border-gray-200 rounded-2xl p-12 text-center">
+        <div className="bg-surface border-2 border-dashed border-line rounded-2xl p-12 text-center">
           <div className="text-4xl mb-3">✅</div>
-          <p className="text-gray-500 text-sm">
+          <p className="text-muted text-sm">
             Keine überfälligen Rechnungen. Sobald eine offene Rechnung die 14-Tage-Frist überschreitet,
             erscheint sie hier mit der fälligen Mahnstufe.
           </p>
-          <Link href="/rechnungen" className="inline-block mt-4 text-blue-600 hover:underline text-sm">
+          <Link href="/rechnungen" className="inline-block mt-4 text-brand hover:underline text-sm">
             Zu den Rechnungen →
           </Link>
         </div>
@@ -122,22 +122,22 @@ export default function MahnungenPage() {
             const vorschauMahnung = faellig ? neueMahnung(r, faellig.stufe) : null
 
             return (
-              <div key={r.id} className="bg-white border rounded-xl p-5 shadow-sm space-y-4">
+              <div key={r.id} className="bg-surface border rounded-xl p-5 shadow-sm space-y-4">
                 {/* Kopf */}
                 <div className="flex items-start justify-between">
                   <div>
                     <div className="flex items-center gap-2">
                       <h3 className="font-semibold">Rechnung {r.rechnungsnummer}</h3>
-                      <span className="text-xs text-gray-400">· {profilName(r.profilId)}</span>
+                      <span className="text-xs text-faint">· {profilName(r.profilId)}</span>
                     </div>
-                    <p className="text-sm text-gray-600">{r.empfaenger.name}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">
+                    <p className="text-sm text-muted">{r.empfaenger.name}</p>
+                    <p className="text-xs text-faint mt-0.5">
                       Rechnungsdatum {r.rechnungsdatum}
                       {ueberfaelligTage > 0 && ` · überfällig seit ${ueberfaelligTage} Tagen`}
                     </p>
                   </div>
                   <div className="text-right">
-                    <div className="text-xs text-gray-400">Offener Betrag</div>
+                    <div className="text-xs text-faint">Offener Betrag</div>
                     <div className="font-semibold">{formatEuro(brutto)}</div>
                   </div>
                 </div>
@@ -161,7 +161,7 @@ export default function MahnungenPage() {
                         <button
                           onClick={() => loeschen(m)}
                           title="Mahnung löschen"
-                          className="hover:text-black leading-none"
+                          className="hover:text-ink leading-none"
                         >
                           ×
                         </button>
@@ -178,33 +178,33 @@ export default function MahnungenPage() {
                         {faellig.label} fällig
                       </span>
                       {vorschauMahnung.mahnkostenBetrag > 0 ? (
-                        <span className="text-gray-600">
+                        <span className="text-muted">
                           + {faellig.aufschlagProzent} % Mahnkosten ({formatEuro(vorschauMahnung.mahnkostenBetrag)}) →{" "}
-                          <span className="font-semibold text-gray-900">
+                          <span className="font-semibold text-ink">
                             Gesamtforderung {formatEuro(vorschauMahnung.gesamtforderung)}
                           </span>
                         </span>
                       ) : (
-                        <span className="text-gray-600">ohne Mahnkosten · neue Frist bis {vorschauMahnung.neuesZahlungsziel}</span>
+                        <span className="text-muted">ohne Mahnkosten · neue Frist bis {vorschauMahnung.neuesZahlungsziel}</span>
                       )}
                     </div>
                     <div className="flex gap-2 shrink-0">
                       <button
                         onClick={() => setVorschau({ mahnung: vorschauMahnung, rechnung: r })}
-                        className="text-blue-600 hover:underline text-sm"
+                        className="text-brand hover:underline text-sm"
                       >
                         Vorschau
                       </button>
                       <button
                         onClick={() => erzeugen(r, faellig.stufe)}
-                        className="bg-blue-600 text-white px-4 py-1.5 rounded-lg hover:bg-blue-700 text-sm font-semibold"
+                        className="bg-brand text-white px-4 py-1.5 rounded-lg hover:bg-brand-deep text-sm font-semibold"
                       >
                         {faellig.label} erstellen
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <div className="border-t pt-4 text-sm text-gray-500">
+                  <div className="border-t pt-4 text-sm text-muted">
                     {historie.length > 0
                       ? "Alle fälligen Stufen erstellt — nächste Stufe noch nicht erreicht."
                       : "Noch keine Mahnstufe fällig."}
