@@ -41,6 +41,16 @@ function deutschZuISO(de: string): string {
   return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`
 }
 
+// Zerlegt einen Leistungszeitraum ("TT.MM.JJJJ – TT.MM.JJJJ" oder einzelnes Datum)
+// in ISO-Von/Bis für die Kalenderfelder. Freitext (z. B. "Juni 2026") ergibt leer.
+function parseZeitraum(text: string): [string, string] {
+  const istDatum = (s: string) => /^\d{1,2}\.\d{1,2}\.\d{4}$/.test(s.trim())
+  const zuIso = (s: string) => (istDatum(s) ? deutschZuISO(s.trim()) : "")
+  const teile = (text ?? "").split(/\s*[–-]\s*/)
+  if (teile.length >= 2) return [zuIso(teile[0]), zuIso(teile[1])]
+  return [zuIso(teile[0] ?? ""), ""]
+}
+
 function leerePosition(mwst: number): PositionEntwurf {
   return { beschreibung: "", mengeText: "1", einzelpreisText: "", mwst_satz: mwst, leistungsdatum: "" }
 }
@@ -73,6 +83,8 @@ function RechnungNeuContent() {
   const [rechnungsnummer, setRechnungsnummer] = useState("")
   const [rechnungsdatumIso, setRechnungsdatumIso] = useState(new Date().toISOString().split("T")[0])
   const [leistungsdatum, setLeistungsdatum] = useState("")
+  const [leistungVonIso, setLeistungVonIso] = useState("")
+  const [leistungBisIso, setLeistungBisIso] = useState("")
   const [betreff, setBetreff] = useState("")
   const [einleitungstext, setEinleitungstext] = useState("")
   const [fusstext, setFusstext] = useState("")
@@ -101,6 +113,11 @@ function RechnungNeuContent() {
         setRechnungsnummer(r.rechnungsnummer)
         setRechnungsdatumIso(deutschZuISO(r.rechnungsdatum) || new Date().toISOString().split("T")[0])
         setLeistungsdatum(r.leistungsdatum ?? "")
+        {
+          const [lv, lb] = parseZeitraum(r.leistungsdatum ?? "")
+          setLeistungVonIso(lv)
+          setLeistungBisIso(lb)
+        }
         setBetreff(r.betreff ?? "")
         setEinleitungstext(r.einleitungstext ?? "")
         setFusstext(r.fusstext ?? "")
@@ -248,6 +265,18 @@ function RechnungNeuContent() {
 
   const faellig = addTage(isoZuDeutsch(rechnungsdatumIso), zahlungszielTage)
 
+  // Setzt Von/Bis aus dem Kalender und schreibt den Zeitraum als Text ins Leistungsdatum.
+  function aktualisiereZeitraum(vonIso: string, bisIso: string) {
+    setLeistungVonIso(vonIso)
+    setLeistungBisIso(bisIso)
+    const von = vonIso ? isoZuDeutsch(vonIso) : ""
+    const bis = bisIso ? isoZuDeutsch(bisIso) : ""
+    if (von && bis) setLeistungsdatum(von === bis ? von : `${von} – ${bis}`)
+    else if (von) setLeistungsdatum(von)
+    else if (bis) setLeistungsdatum(bis)
+    else setLeistungsdatum("")
+  }
+
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       {toast && <Toast message={toast} onClose={() => setToast(null)} />}
@@ -317,7 +346,30 @@ function RechnungNeuContent() {
         </div>
         <div>
           <label className="block text-xs font-medium text-muted mb-1">Leistungsdatum / -zeitraum</label>
-          <input value={leistungsdatum} onChange={(e) => setLeistungsdatum(e.target.value)} placeholder="z. B. 01.06.2026 – 30.06.2026" className="w-full border rounded-lg px-3 py-2 text-sm" />
+          <div className="flex items-center gap-2">
+            <input
+              type="date"
+              aria-label="Leistung von"
+              value={leistungVonIso}
+              onChange={(e) => aktualisiereZeitraum(e.target.value, leistungBisIso)}
+              className="w-full border rounded-lg px-3 py-2 text-sm"
+            />
+            <span className="text-faint shrink-0">–</span>
+            <input
+              type="date"
+              aria-label="Leistung bis"
+              value={leistungBisIso}
+              onChange={(e) => aktualisiereZeitraum(leistungVonIso, e.target.value)}
+              className="w-full border rounded-lg px-3 py-2 text-sm"
+            />
+          </div>
+          <input
+            value={leistungsdatum}
+            onChange={(e) => setLeistungsdatum(e.target.value)}
+            placeholder="oder frei eingeben, z. B. Juni 2026"
+            className="w-full border rounded-lg px-3 py-2 text-sm mt-2"
+          />
+          <p className="text-xs text-faint mt-1">Von–bis im Kalender wählen (z. B. Monatsende bequem anklicken) — der Zeitraum wird automatisch eingetragen.</p>
         </div>
         <div>
           <label className="block text-xs font-medium text-muted mb-1">Zahlungsziel (Tage)</label>
