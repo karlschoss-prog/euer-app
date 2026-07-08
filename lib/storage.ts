@@ -4,6 +4,7 @@ import {
   ladeAnhangBlob, speichereAnhangBlob, loescheAnhangBlob,
   blobZuDataUrl, dataUrlZuBlob, bereinigeVerwaisteAnhaenge, leereAnhangStore,
 } from "@/lib/anhaenge"
+import { Funktionen, mitDefaults } from "@/lib/einstellungen"
 
 const STORAGE_KEY = "euer_belege"
 const VORLAGEN_KEY = "euer_vorlagen"
@@ -13,6 +14,7 @@ const KUNDEN_KEY = "euer_kunden"
 const RECHNUNGEN_KEY = "euer_rechnungen"
 const MAHNUNGEN_KEY = "euer_mahnungen"
 const ANFANG_KEY = "euer_anfangsbestaende"
+const EINSTELLUNGEN_KEY = "euer_einstellungen"
 
 // Name des Events, das nach jeder Datenänderung gefeuert wird.
 // Das Auto-Backup hört darauf und schreibt die Backup-Datei neu.
@@ -83,6 +85,7 @@ export async function exportiereBelege(): Promise<string> {
       rechnungen: ladeRechnungen(),
       mahnungen: ladeMahnungen(),
       anfangsbestaende: ladeAnfangsbestaende(),
+      einstellungen: ladeFunktionen(),
       anhaenge,
     },
     null,
@@ -94,7 +97,7 @@ export async function exportiereBelege(): Promise<string> {
 // Backup-Datei-Verknüpfung und -Zeitstempel bleiben erhalten.
 export function setzeAllesZurueck(): void {
   if (typeof window === "undefined") return
-  ;[STORAGE_KEY, VORLAGEN_KEY, SPERREN_KEY, PROFILE_KEY, KUNDEN_KEY, RECHNUNGEN_KEY, MAHNUNGEN_KEY, ANFANG_KEY].forEach(
+  ;[STORAGE_KEY, VORLAGEN_KEY, SPERREN_KEY, PROFILE_KEY, KUNDEN_KEY, RECHNUNGEN_KEY, MAHNUNGEN_KEY, ANFANG_KEY, EINSTELLUNGEN_KEY].forEach(
     (key) => localStorage.removeItem(key)
   )
   void leereAnhangStore()
@@ -123,7 +126,7 @@ export async function importiereDaten(json: string): Promise<void> {
   }
 
   const p = parsed as Record<string, unknown>
-  const bekannteSchluessel = ["belege", "vorlagen", "unternehmensprofile", "kunden", "rechnungen", "mahnungen", "anfangsbestaende", "anhaenge"]
+  const bekannteSchluessel = ["belege", "vorlagen", "unternehmensprofile", "kunden", "rechnungen", "mahnungen", "anfangsbestaende", "einstellungen", "anhaenge"]
   if (!bekannteSchluessel.some((k) => k in p)) {
     throw new Error("Die Datei enthält keine EÜR-Daten (keine Belege, Rechnungen o. Ä. gefunden).")
   }
@@ -136,6 +139,7 @@ export async function importiereDaten(json: string): Promise<void> {
     if (p.rechnungen) localStorage.setItem(RECHNUNGEN_KEY, JSON.stringify(p.rechnungen))
     if (p.mahnungen) localStorage.setItem(MAHNUNGEN_KEY, JSON.stringify(p.mahnungen))
     if (p.anfangsbestaende) localStorage.setItem(ANFANG_KEY, JSON.stringify(p.anfangsbestaende))
+    if (p.einstellungen) localStorage.setItem(EINSTELLUNGEN_KEY, JSON.stringify(p.einstellungen))
   } catch (e) {
     if (e instanceof Error && e.name === "QuotaExceededError") {
       throw new Error("Speicherlimit des Browsers überschritten (Backup zu groß, evtl. großes Logo). Daten ggf. verkleinern.")
@@ -158,6 +162,29 @@ export async function importiereDaten(json: string): Promise<void> {
       }
     }
   }
+}
+
+// --- Funktions-Schalter (Feature-Flags) ---
+
+export function ladeFunktionen(): Funktionen {
+  if (typeof window === "undefined") return mitDefaults(null)
+  const raw = localStorage.getItem(EINSTELLUNGEN_KEY)
+  try {
+    return mitDefaults(raw ? (JSON.parse(raw) as Partial<Funktionen>) : null)
+  } catch {
+    return mitDefaults(null)
+  }
+}
+
+export function speichereFunktionen(funktionen: Funktionen): void {
+  schreibe(EINSTELLUNGEN_KEY, funktionen)
+}
+
+// Wurden die Funktionen jemals bewusst gesetzt (Wizard/Einstellungen durchlaufen)?
+// Steuert, ob der Onboarding-Wizard beim Erststart erscheint.
+export function hatFunktionenGesetzt(): boolean {
+  if (typeof window === "undefined") return true
+  return localStorage.getItem(EINSTELLUNGEN_KEY) !== null
 }
 
 // --- Anfangskontostand pro Jahr ---
