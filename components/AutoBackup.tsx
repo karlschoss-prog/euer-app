@@ -14,8 +14,9 @@ export default function AutoBackup() {
         const perm = await handle.queryPermission({ mode: "readwrite" })
         if (perm !== "granted") return
 
+        const inhalt = await exportiereBelege()
         const writable = await handle.createWritable()
-        await writable.write(exportiereBelege())
+        await writable.write(inhalt)
         await writable.close()
         speichereAutoBackupZeitstempel()
         speichereBackupZeitstempel()

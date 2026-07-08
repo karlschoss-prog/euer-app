@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Beleg } from "@/types/beleg"
 import { formatEuro } from "@/lib/formatierung"
+import { oeffneAnhang } from "@/lib/anhaenge"
 
 interface BelegTabelleProps {
   belege: Beleg[]
@@ -91,6 +92,17 @@ export default function BelegTabelle({
                     <td className="border border-line px-3 py-2 whitespace-nowrap">
                       {b.datum}
                       {gesperrt && <span className="ml-1 text-xs text-faint">🔒</span>}
+                      {b.anhaenge && b.anhaenge.length > 0 && (
+                        <button
+                          onClick={() => oeffneAnhang(b.anhaenge![0].id, b.anhaenge![0].name)}
+                          className="ml-1.5 text-xs text-brand hover:text-brand-deep align-middle"
+                          title={b.anhaenge.length === 1
+                            ? `Anhang ansehen: ${b.anhaenge[0].name}`
+                            : `${b.anhaenge.length} Anhänge — ersten ansehen (alle im Bearbeiten-Dialog)`}
+                        >
+                          📎{b.anhaenge.length > 1 ? b.anhaenge.length : ""}
+                        </button>
+                      )}
                     </td>
                     <td className="border border-line px-3 py-2">{b.belegnummer ?? "—"}</td>
                     <td className="border border-line px-3 py-2">{b.kunde_lieferant ?? "—"}</td>

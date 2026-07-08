@@ -531,6 +531,17 @@ export async function erzeugeRechnungPdf(rechnung: Rechnung): Promise<void> {
   doc.save(dateiname)
 }
 
+// Liefert die rohen PDF-Bytes einer Rechnung (für Weiterverarbeitung, z. B.
+// XML-Einbettung zu ZUGFeRD/Factur-X). Deckt beide Render-Wege ab.
+export async function erzeugeRechnungPdfBytes(rechnung: Rechnung): Promise<Uint8Array> {
+  if (istReactPdfDesign(rechnung)) {
+    const blob = await reactPdfBlob(rechnung)
+    return new Uint8Array(await blob.arrayBuffer())
+  }
+  const doc = await baueRechnungDoc(rechnung)
+  return new Uint8Array(doc.output("arraybuffer") as ArrayBuffer)
+}
+
 // Blob-URL für die Vorschau (Aufrufer gibt sie mit URL.revokeObjectURL frei).
 export async function erzeugeRechnungVorschauUrl(rechnung: Rechnung): Promise<string> {
   if (istReactPdfDesign(rechnung)) {

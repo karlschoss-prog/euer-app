@@ -57,8 +57,8 @@ export default function DatenPage() {
 
   const { text: backupText, dringend } = backupAlterText(backupTs)
 
-  function handleExport() {
-    const json = exportiereBelege()
+  async function handleExport() {
+    const json = await exportiereBelege()
     const blob = new Blob([json], { type: "application/json" })
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
@@ -77,9 +77,9 @@ export default function DatenPage() {
     setImportStatus("idle")
     setImportFehler(null)
     const reader = new FileReader()
-    reader.onload = (ev) => {
+    reader.onload = async (ev) => {
       try {
-        importiereDaten(ev.target?.result as string)
+        await importiereDaten(ev.target?.result as string)
         setImportStatus("ok")
         setVorlagen(ladeVorlagen())
         setTimeout(() => window.location.reload(), 1500)
