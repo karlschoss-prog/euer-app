@@ -7,6 +7,7 @@ import { ladeRechnungen, ladeProfile, loescheRechnung, speichereRechnungMitBeleg
 import { rechnungSummen } from "@/lib/rechnung"
 import { formatEuro } from "@/lib/formatierung"
 import { erzeugeRechnungPdf } from "@/components/RechnungPdf"
+import { erzeugeXRechnungXml, erzeugeZugferdPdf } from "@/lib/erechnungAusstellung"
 import RechnungVorschauModal from "@/components/RechnungVorschauModal"
 import Toast from "@/components/Toast"
 
@@ -163,6 +164,24 @@ export default function RechnungenPage() {
                       <div className="flex gap-3 justify-end text-xs">
                         <button onClick={() => setVorschau(r)} className="text-brand hover:underline">Vorschau</button>
                         <button onClick={() => erzeugeRechnungPdf(r)} className="text-brand hover:underline">PDF</button>
+                        <button
+                          onClick={() => { erzeugeXRechnungXml(r); setToast("XRechnung-XML heruntergeladen") }}
+                          className="text-brand hover:underline"
+                          title="Reine E-Rechnung als XML (EN 16931 / XRechnung-Syntax)"
+                        >
+                          XML
+                        </button>
+                        <button
+                          onClick={() =>
+                            erzeugeZugferdPdf(r)
+                              .then(() => setToast("ZUGFeRD-PDF heruntergeladen"))
+                              .catch(() => setToast("ZUGFeRD-Erzeugung fehlgeschlagen"))
+                          }
+                          className="text-brand hover:underline"
+                          title="PDF mit eingebettetem E-Rechnungs-XML (ZUGFeRD/Factur-X)"
+                        >
+                          ZUGFeRD
+                        </button>
                         <Link href={`/rechnungen/neu?id=${r.id}`} className="text-muted hover:underline">Bearbeiten</Link>
                         <button onClick={() => loeschen(r)} className="text-neg hover:underline">Löschen</button>
                       </div>
