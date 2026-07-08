@@ -34,6 +34,15 @@ const LINKS = [
     ),
   },
   {
+    href: "/inbox",
+    label: "Beleg-Inbox",
+    icon: (
+      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+        <path fillRule="evenodd" d="M5 3a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2H5zm0 2h10v6h-2.586a1 1 0 00-.707.293l-1.121 1.121a1 1 0 01-.707.293H9.828a1 1 0 01-.707-.293l-1.121-1.121A1 1 0 007.293 11H5V5z" clipRule="evenodd" />
+      </svg>
+    ),
+  },
+  {
     href: "/rechnungen",
     label: "Rechnungen",
     icon: (
@@ -75,6 +84,15 @@ const LINKS = [
     icon: (
       <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
         <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+      </svg>
+    ),
+  },
+  {
+    href: "/umsatzsteuer",
+    label: "Umsatzsteuer",
+    icon: (
+      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+        <path fillRule="evenodd" d="M15.707 4.293a1 1 0 010 1.414l-10 10a1 1 0 01-1.414-1.414l10-10a1 1 0 011.414 0zM6.5 6a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm7 7a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" clipRule="evenodd" />
       </svg>
     ),
   },

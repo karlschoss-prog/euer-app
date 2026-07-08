@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { ladeBelege, ladeGesperrteMonate, sperreMonate, entsperreMonate } from "@/lib/storage"
 import { berechneJahresEuer, berechneUmsatzsteuer, berechneJahresVorsteuer } from "@/lib/berechnung"
 import { formatEuro } from "@/lib/formatierung"
@@ -259,6 +260,11 @@ export default function JahresuebersichtPage() {
                 </tr>
               </tfoot>
             </table>
+            <div className="mt-4 flex justify-end">
+              <Link href="/umsatzsteuer" className="text-sm text-brand hover:underline font-medium">
+                Zur vollständigen Umsatzsteuer-Voranmeldung (je Steuersatz, monatlich, Export) →
+              </Link>
+            </div>
           </div>
         )}
       </div>
