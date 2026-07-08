@@ -1,5 +1,17 @@
 export type BelegTyp = "einnahme" | "ausgabe"
 
+// Metadaten eines Beleganhangs (Foto/PDF). Die Binärdatei selbst liegt nicht hier,
+// sondern im IndexedDB-Blob-Store (lib/anhaenge.ts), adressiert über `id`. GoBD
+// verlangt den Originalbeleg — daher werden Anhänge im Backup mitgesichert.
+export interface Anhang {
+  id: string              // UUID, zugleich Schlüssel im Blob-Store
+  name: string            // ursprünglicher Dateiname
+  mime: string            // z. B. "application/pdf", "image/jpeg"
+  groesse: number         // Bytes
+  erstellt_am: string     // ISO-Timestamp
+  quelle?: "upload" | "e-rechnung" | "inbox"  // Herkunft (Doku/Inbox)
+}
+
 export interface Beleg {
   id: string
   typ: BelegTyp
@@ -16,6 +28,7 @@ export interface Beleg {
   kategorie?: string
   erstellt_am: string
   rechnungId?: string     // gesetzt, wenn aus einer Rechnung erzeugt
+  anhaenge?: Anhang[]     // angehängte Belege (Foto/PDF), Binärdaten im Blob-Store
 }
 
 export interface Vorlage {

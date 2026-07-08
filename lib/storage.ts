@@ -1,5 +1,9 @@
 import { Beleg, Vorlage, Unternehmensprofil, Kunde, Rechnung, Mahnung } from "@/types/beleg"
 import { erstelleBelegeAusRechnung, trailingNumber } from "@/lib/rechnung"
+import {
+  ladeAnhangBlob, speichereAnhangBlob, loescheAnhangBlob,
+  blobZuDataUrl, dataUrlZuBlob, bereinigeVerwaisteAnhaenge, leereAnhangStore,
+} from "@/lib/anhaenge"
 
 const STORAGE_KEY = "euer_belege"
 const VORLAGEN_KEY = "euer_vorlagen"
@@ -36,7 +40,10 @@ export function speichereBeleg(beleg: Beleg): void {
 }
 
 export function loescheBeleg(id: string): void {
+  const beleg = ladeBelege().find((b) => b.id === id)
   schreibe(STORAGE_KEY, ladeBelege().filter((b) => b.id !== id))
+  // zugehörige Anhang-Blobs mit entfernen
+  beleg?.anhaenge?.forEach((a) => { void loescheAnhangBlob(a.id) })
 }
 
 export function aktualisiereBeleg(aktualisiert: Beleg): void {
@@ -51,16 +58,32 @@ export function loescheBelegeNachRechnung(rechnungId: string): void {
   schreibe(STORAGE_KEY, ladeBelege().filter((b) => b.rechnungId !== rechnungId))
 }
 
-export function exportiereBelege(): string {
+// Baut das vollständige Backup als JSON — inkl. Beleganhänge (Foto/PDF) als
+// base64-Data-URLs. Deshalb asynchron: die Binärdaten liegen in IndexedDB.
+export async function exportiereBelege(): Promise<string> {
+  const belege = ladeBelege()
+
+  // alle noch referenzierten Anhänge einsammeln; verwaiste Blobs dabei aufräumen
+  const referenziert = new Set<string>()
+  belege.forEach((b) => b.anhaenge?.forEach((a) => referenziert.add(a.id)))
+  await bereinigeVerwaisteAnhaenge(referenziert)
+
+  const anhaenge: Record<string, string> = {}
+  for (const id of referenziert) {
+    const blob = await ladeAnhangBlob(id)
+    if (blob) anhaenge[id] = await blobZuDataUrl(blob)
+  }
+
   return JSON.stringify(
     {
-      belege: ladeBelege(),
+      belege,
       vorlagen: ladeVorlagen(),
       unternehmensprofile: ladeProfile(),
       kunden: ladeKunden(),
       rechnungen: ladeRechnungen(),
       mahnungen: ladeMahnungen(),
       anfangsbestaende: ladeAnfangsbestaende(),
+      anhaenge,
     },
     null,
     2
@@ -74,10 +97,11 @@ export function setzeAllesZurueck(): void {
   ;[STORAGE_KEY, VORLAGEN_KEY, SPERREN_KEY, PROFILE_KEY, KUNDEN_KEY, RECHNUNGEN_KEY, MAHNUNGEN_KEY, ANFANG_KEY].forEach(
     (key) => localStorage.removeItem(key)
   )
+  void leereAnhangStore()
   window.dispatchEvent(new Event(DATEN_GEAENDERT))
 }
 
-export function importiereDaten(json: string): void {
+export async function importiereDaten(json: string): Promise<void> {
   // BOM und Leerraum entfernen (manche Editoren/Transferwege fügen sie hinzu)
   const text = (json ?? "").replace(/^﻿/, "").trim()
   if (!text) {
@@ -99,7 +123,7 @@ export function importiereDaten(json: string): void {
   }
 
   const p = parsed as Record<string, unknown>
-  const bekannteSchluessel = ["belege", "vorlagen", "unternehmensprofile", "kunden", "rechnungen", "mahnungen", "anfangsbestaende"]
+  const bekannteSchluessel = ["belege", "vorlagen", "unternehmensprofile", "kunden", "rechnungen", "mahnungen", "anfangsbestaende", "anhaenge"]
   if (!bekannteSchluessel.some((k) => k in p)) {
     throw new Error("Die Datei enthält keine EÜR-Daten (keine Belege, Rechnungen o. Ä. gefunden).")
   }
@@ -117,6 +141,22 @@ export function importiereDaten(json: string): void {
       throw new Error("Speicherlimit des Browsers überschritten (Backup zu groß, evtl. großes Logo). Daten ggf. verkleinern.")
     }
     throw e
+  }
+
+  // Beleganhänge (base64-Data-URLs) in den IndexedDB-Blob-Store zurückschreiben.
+  // Zuerst leeren, damit keine Blobs aus dem vorherigen Datenbestand übrig bleiben.
+  await leereAnhangStore()
+  if (p.anhaenge && typeof p.anhaenge === "object") {
+    const eintraege = Object.entries(p.anhaenge as Record<string, unknown>)
+    for (const [id, dataUrl] of eintraege) {
+      if (typeof dataUrl === "string" && dataUrl.startsWith("data:")) {
+        try {
+          await speichereAnhangBlob(id, dataUrlZuBlob(dataUrl))
+        } catch {
+          // einzelnen defekten Anhang überspringen, Import nicht abbrechen
+        }
+      }
+    }
   }
 }
 
