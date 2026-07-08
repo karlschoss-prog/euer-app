@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { Geist } from "next/font/google"
 import Sidebar from "@/components/Sidebar"
 import AutoBackup from "@/components/AutoBackup"
+import OnboardingWizard from "@/components/OnboardingWizard"
 import "./globals.css"
 
 const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] })
@@ -20,6 +21,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-full font-sans flex">
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT }} />
         <AutoBackup />
+        <OnboardingWizard />
         <Sidebar />
         <main className="flex-1 min-h-screen overflow-x-auto">{children}</main>
       </body>

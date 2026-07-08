@@ -2,9 +2,12 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useState, useEffect } from "react"
 import ThemeToggle from "@/components/ThemeToggle"
+import { ladeFunktionen, DATEN_GEAENDERT } from "@/lib/storage"
+import { istFunktionAktiv, FunktionsKey, FUNKTION_DEFAULT, Funktionen } from "@/lib/einstellungen"
 
-const LINKS = [
+const LINKS: { href: string; label: string; icon: React.ReactNode; flag?: FunktionsKey }[] = [
   {
     href: "/",
     label: "Dashboard",
@@ -36,6 +39,7 @@ const LINKS = [
   {
     href: "/inbox",
     label: "Beleg-Inbox",
+    flag: "inbox",
     icon: (
       <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
         <path fillRule="evenodd" d="M5 3a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2H5zm0 2h10v6h-2.586a1 1 0 00-.707.293l-1.121 1.121a1 1 0 01-.707.293H9.828a1 1 0 01-.707-.293l-1.121-1.121A1 1 0 007.293 11H5V5z" clipRule="evenodd" />
@@ -45,6 +49,7 @@ const LINKS = [
   {
     href: "/rechnungen",
     label: "Rechnungen",
+    flag: "rechnungen",
     icon: (
       <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
         <path fillRule="evenodd" d="M4 4a2 2 0 012-2h5.586A2 2 0 0113 2.586L16.414 6A2 2 0 0117 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 3a1 1 0 011-1h2a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7zm0 4a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
@@ -54,6 +59,7 @@ const LINKS = [
   {
     href: "/mahnungen",
     label: "Mahnungen",
+    flag: "mahnwesen",
     icon: (
       <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
         <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -63,6 +69,7 @@ const LINKS = [
   {
     href: "/kunden",
     label: "Kunden",
+    flag: "kunden",
     icon: (
       <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
         <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
@@ -90,6 +97,7 @@ const LINKS = [
   {
     href: "/umsatzsteuer",
     label: "Umsatzsteuer",
+    flag: "umsatzsteuer",
     icon: (
       <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
         <path fillRule="evenodd" d="M15.707 4.293a1 1 0 010 1.414l-10 10a1 1 0 01-1.414-1.414l10-10a1 1 0 011.414 0zM6.5 6a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm7 7a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" clipRule="evenodd" />
@@ -99,6 +107,7 @@ const LINKS = [
   {
     href: "/export",
     label: "PDF-Export",
+    flag: "pdfExport",
     icon: (
       <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
         <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clipRule="evenodd" />
@@ -114,10 +123,30 @@ const LINKS = [
       </svg>
     ),
   },
+  {
+    href: "/einstellungen",
+    label: "Einstellungen",
+    icon: (
+      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+        <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.53 1.53 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.53 1.53 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.53 1.53 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.532 1.532 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.53 1.53 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.53 1.53 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.53 1.53 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+      </svg>
+    ),
+  },
 ]
 
 export default function Sidebar() {
   const pathname = usePathname()
+  const [funktionen, setFunktionen] = useState<Funktionen>(FUNKTION_DEFAULT)
+
+  useEffect(() => {
+    const aktualisiere = () => setFunktionen(ladeFunktionen())
+    aktualisiere()
+    // Nach jeder Datenänderung (auch Einstellungen/Import) neu einlesen
+    window.addEventListener(DATEN_GEAENDERT, aktualisiere)
+    return () => window.removeEventListener(DATEN_GEAENDERT, aktualisiere)
+  }, [])
+
+  const sichtbareLinks = LINKS.filter((l) => !l.flag || istFunktionAktiv(funktionen, l.flag))
 
   return (
     <aside className="w-60 min-h-screen bg-surface border-r border-line flex flex-col shrink-0 sticky top-0 self-start h-screen">
@@ -139,7 +168,7 @@ export default function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 py-3 px-3 space-y-0.5">
-        {LINKS.map((l) => {
+        {sichtbareLinks.map((l) => {
           const active = l.href === "/" ? pathname === "/" : pathname.startsWith(l.href)
           return (
             <Link
