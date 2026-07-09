@@ -254,7 +254,7 @@ export default function InvoicePDF({ data }: { data: InvoiceData }) {
             <Text style={[styles.th, styles.colSum]}>Betrag</Text>
           </View>
           {items.map((it, i) => (
-            <View style={styles.row} key={i}>
+            <View style={styles.row} key={i} wrap={false}>
               <View style={styles.colDesc}>
                 <Text style={styles.itemName}>{it.name}</Text>
                 {it.detail ? <Text style={styles.itemDesc}>{it.detail}</Text> : null}
@@ -267,7 +267,7 @@ export default function InvoicePDF({ data }: { data: InvoiceData }) {
         </View>
 
         {/* totals */}
-        <View style={styles.totalsWrap}>
+        <View style={styles.totalsWrap} wrap={false}>
           <View style={styles.totals}>
             <View style={styles.totalRow}>
               <Text style={styles.totalMuted}>Zwischensumme</Text>
@@ -296,7 +296,7 @@ export default function InvoicePDF({ data }: { data: InvoiceData }) {
         <View style={styles.spacer} />
 
         {/* payment + bank */}
-        <View style={styles.payment}>
+        <View style={styles.payment} wrap={false}>
           <View style={styles.payCol}>
             <Text style={styles.partyLabel}>Zahlung</Text>
             <Text style={styles.payTxt}>
