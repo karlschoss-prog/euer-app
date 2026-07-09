@@ -269,7 +269,7 @@ function renderKreativ(doc: JsPdfDoc, autoTable: AutoTable, rechnung: Rechnung, 
   doc.setTextColor(0); doc.setFont("helvetica", "normal")
 
   if (rechnung.fusstext) {
-    doc.setFontSize(8); doc.setTextColor(120)
+    doc.setFontSize(8); doc.setTextColor(0)
     doc.text(doc.splitTextToSize(rechnung.fusstext, rechts - links), links, ySum + 12)
     doc.setTextColor(0)
   }
@@ -398,13 +398,13 @@ export function zeichneBankverbindung(doc: JsPdfDoc, font: string, rechnung: Rec
   let y = startY + 4
   doc.setDrawColor(220); doc.setLineWidth(0.3); doc.line(links, y, rechts, y)
   y += 8
-  doc.setFont(font, "bold"); doc.setFontSize(10); doc.setTextColor(40)
+  doc.setFont(font, "bold"); doc.setFontSize(10); doc.setTextColor(0)
   doc.text("Bankverbindung", links, y)
   doc.setFont(font, "normal"); doc.setFontSize(9)
   y += 8
   bank.forEach(([k, v]) => {
-    doc.setTextColor(140); doc.text(k, links, y)
-    doc.setTextColor(40); doc.text(v, links + 38, y)
+    doc.setTextColor(0); doc.text(k, links, y)
+    doc.setTextColor(0); doc.text(v, links + 38, y)
     y += 6
   })
   doc.setTextColor(0)
@@ -428,7 +428,7 @@ function zeichneHinweisUndBank(doc: JsPdfDoc, rechnung: Rechnung, startY: number
 
   // Zahlungsziel + Verwendungszweck-Hinweis
   y += 4
-  doc.setFontSize(9); doc.setTextColor(140)
+  doc.setFontSize(9); doc.setTextColor(0)
   doc.text(`Zahlungsziel: ${rechnung.zahlungszielTage} Tage nach Rechnungserhalt`, links, y)
   y += 5.5
   doc.text("Bitte überweisen Sie den Betrag unter Angabe der Rechnungsnummer.", links, y)
@@ -441,7 +441,7 @@ function zeichneAbschluss(doc: JsPdfDoc, rechnung: Rechnung, accent: RGB) {
   void accent
   const y = zeichneHinweisUndBank(doc, rechnung, doc.lastSummenY ?? doc.lastAutoTable.finalY + 16)
   if (rechnung.fusstext) {
-    doc.setFontSize(8); doc.setTextColor(120)
+    doc.setFontSize(8); doc.setTextColor(0)
     doc.text(doc.splitTextToSize(rechnung.fusstext, 170), 20, y + 2)
     doc.setTextColor(0)
   }
