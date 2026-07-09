@@ -236,8 +236,8 @@ function renderKreativ(doc: JsPdfDoc, autoTable: AutoTable, rechnung: Rechnung, 
     columnStyles,
   })
 
-  // Summen: farbiger Block
-  let ySum = doc.lastAutoTable.finalY + 8
+  // Summen: farbiger Block (mit Seitenumbruch, falls unten kein Platz mehr ist)
+  let ySum = abschlussStartY(doc, rechnung, summen)
   if (rechnung.kleinunternehmer) {
     doc.setFillColor(...accent); doc.roundedRect(120, ySum, 70, 14, 2, 2, "F")
     doc.setTextColor(255); doc.setFont("helvetica", "bold"); doc.setFontSize(11)
@@ -336,8 +336,30 @@ function renderElegant(doc: JsPdfDoc, autoTable: AutoTable, rechnung: Rechnung, 
 
 // --- gemeinsame Summen-/Abschlussblöcke (klassisch & elegant) ---
 
+// Schätzt die Höhe des gesamten Abschlussblocks (Summen + Bank + Zahlungsziel +
+// ggf. §19-Hinweis/Fußtext) und legt eine neue Seite an, falls er unter der
+// Tabelle nicht mehr auf die aktuelle Seite passt. Verhindert, dass der Abschluss
+// bei langen Rechnungen unten aus der Seite läuft. Gibt das Start-Y zurück.
+function abschlussStartY(doc: JsPdfDoc, rechnung: Rechnung, summen: RechnungSummen): number {
+  const a = rechnung.absender
+  const bankZeilen = [a.kontoinhaber, a.iban, a.bic, a.bank].filter(Boolean).length
+  let hoehe = 8
+  hoehe += rechnung.kleinunternehmer ? 8 : 16 + summen.mwstGruppen.length * 6
+  if (rechnung.kleinunternehmer) hoehe += 12        // §19-Hinweis
+  if (bankZeilen) hoehe += 20 + bankZeilen * 6      // Bankverbindungs-Block
+  hoehe += 18                                        // Zahlungsziel-Hinweise
+  if (rechnung.fusstext) hoehe += 14
+  const y = doc.lastAutoTable.finalY + 8
+  const seitenHoehe = doc.internal.pageSize.getHeight()  // 297 mm bei A4
+  if (y + hoehe > seitenHoehe - 12) {
+    doc.addPage()
+    return 20
+  }
+  return y
+}
+
 function zeichneSummenRechts(doc: JsPdfDoc, rechnung: Rechnung, summen: RechnungSummen, accent: RGB, stil: "linie" | "elegant") {
-  let ySum = doc.lastAutoTable.finalY + 8
+  let ySum = abschlussStartY(doc, rechnung, summen)
   const labelX = 120, wertX = 190
   doc.setFontSize(10)
 
